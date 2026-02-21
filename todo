@@ -1,0 +1,78 @@
+# Tasks
+
+##  Codebase Refactoring
+- [x] Reorganize project structure (models, handlers, services, routes, etc.)
+
+---
+
+##  Frontend Implementation
+- [ ] Implement page layouts and designs
+- [ ] Implement void (empty state) components
+
+---
+
+##  REST API Implementation
+
+### Core Resources
+- [ ] Implement Post endpoints
+- [ ] Implement User endpoints
+- [ ] Implement Category endpoints
+- [ ] Implement Comment endpoints
+
+---
+
+##  WebSocket Implementation (Real-Time Features)
+
+### Chat System
+- [ ] Implement message sending and receiving
+- [ ] Implement real-time notifications
+- [ ] Track and update user online/offline status
+
+---
+
+##  Authentication System
+
+### Backend
+- [ ] Implement user registration
+- [ ] Validate and securely store user credentials in the database
+- [ ] Implement login with cookie-based sessions (with expiration)
+- [ ] Implement logout functionality
+- [ ] (Bonus) Use UUID-based session management
+
+### Frontend (UI)
+- [ ] Implement Login page
+- [ ] Implement Registration page
+- [ ] Implement Logout functionality
+
+---
+
+##  Posts & Comments Functionality
+
+### Posts
+- [ ] Create posts with categories
+- [ ] Create posts with image uploads
+- [ ] Allow non-registered users to view posts
+
+### Comments
+- [ ] Allow registered users to create comments
+
+---
+
+##  Post Listing & Filtering
+- [ ] List all posts
+- [ ] Filter posts by author
+- [ ] Filter posts by category
+
+---
+
+## Chat Features
+- [ ] Display online and offline users
+- [ ] Send and receive direct messages
+- [ ] Load previous chat history
+
+---
+
+##  Error Handling & HTTP Status Codes
+- [ ] Handle application errors properly
+- [ ] Return appropriate HTTP status codes
+- [ ] Implement user-friendly error messages
