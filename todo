@@ -76,3 +76,29 @@
 - [ ] Handle application errors properly
 - [ ] Return appropriate HTTP status codes
 - [ ] Implement user-friendly error messages
+
+
+🏗 Recommended Go Web Architecture
+
+myapp/
+│
+├── go.mod
+├── main.go                ← app entry point
+│
+├── cmd/                   ← optional (for large apps)
+│
+├── internal/              ← private app logic
+│   ├── handlers/          ← HTTP handlers (controllers)
+│   ├── services/          ← business logic
+│   ├── repository/        ← database access
+│   ├── models/            ← structs / data models
+│   └── database/          ← DB connection setup
+│
+├── routes/                ← route definitions
+│   └── routes.go
+│
+└── frontend/
+    └── public/
+        ├── index.html
+        ├── app.js
+        └── style.css
