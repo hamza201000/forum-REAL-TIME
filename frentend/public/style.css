@@ -12,12 +12,12 @@
     }
 
     .card {
-      width: 100%;
+      width: auto;
       max-width: 420px;
       background: #111;
       border: 1px solid #1e1e1e;
       border-radius: 12px;
-      padding: 40px 36px;
+      padding: 30px;
       margin: 20px;
       animation: fadeUp 0.5s ease both;
     }
