@@ -24,6 +24,5 @@ func InitDB() *sql.DB {
 		log.Fatal(err)
 	}
 	fmt.Println("Database & tables created successfully")
-
 	return db
 }

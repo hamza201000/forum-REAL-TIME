@@ -3,7 +3,7 @@ import { createRegister } from "./pageRegister.js"
 
 export function createLogin() {
     const app = document.getElementById("app")
-    
+
     app.innerHTML = `<form id='userForm' class='card'>
 
 <div class='field'>
@@ -34,5 +34,16 @@ export function createLogin() {
     registerLink.addEventListener("click", function (e) {
         e.preventDefault()
         createRegister()
+    })
+    const button = document.querySelector(".btn")
+    button.addEventListener("click", function (e) {
+        e.preventDefault()
+        const form = document.getElementById("userForm")
+        const formData = new FormData(form)
+        const data = toLowerObject(Object.fromEntries(formData.entries()))
+        if (!checkUser("login", data)) {
+            return
+        }
+        sendData(data, "/login")
     })
 }
