@@ -50,11 +50,6 @@ func LoginHandler(svc *services.UserService) http.HandlerFunc {
 			services.SenData(w, "error", "Invalid request body", http.StatusBadRequest)
 			return
 		}
-		token, err := svc.LoginUser(data.Username, data.Password)
-		if err != nil {
-			services.SenData(w, "error", "Invalid credentials", http.StatusUnauthorized)
-			return
-		}
-		services.SenData(w, "token", token, http.StatusOK)
+		
 	}
 }
