@@ -21,3 +21,9 @@ type Session struct {
 	createdAt time.Time
 	ExpiresAt time.Time
 }
+
+type LoginRequest struct {
+	Username string `json:"username"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
