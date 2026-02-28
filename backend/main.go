@@ -18,5 +18,6 @@ func main() {
 	userRepo := repository.NewUserRepository(DB)
 	userService := services.NewUserService(userRepo)
 	http.HandleFunc("/register", handlers.RegisterHandler(userService))
+	http.HandleFunc("/login", handlers.LoginHandler(userService))
 	http.ListenAndServe(":8080", nil)
 }

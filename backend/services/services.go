@@ -2,7 +2,7 @@ package services
 
 import (
 	"errors"
-	"strings"
+	"fmt"
 
 	"golang.org/x/crypto/bcrypt"
 
@@ -23,11 +23,10 @@ func (s *UserService) RegisterUser(user models.User) error {
 		user.Age == "" || user.Gender == "" || user.Email == "" || user.Password == "" {
 		return errors.New("missing required fields")
 	}
-
 	if len(user.Password) < 8 {
 		return errors.New("password must be at least 8 characters long")
 	}
-	user.Email = strings.ToLower(strings.TrimSpace(user.Email))
+
 	hashPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return errors.New("failed to hash password")
@@ -35,3 +34,21 @@ func (s *UserService) RegisterUser(user models.User) error {
 	user.Password = string(hashPassword)
 	return s.Repo.CreateUser(user)
 }
+
+func (s *UserService) LoginUser(data models.LoginRequest) (int, error) {
+	if data.Username == "" {
+		return 0, errors.New("email or username is required")
+	}
+	if data.Password == "" {
+		return 0, errors.New("password is required")
+	}
+
+	userID, err := s.Repo.GetUserId(data)
+	if err != nil {
+		fmt.Println("Error getting user ID:", err)
+		return 0, err
+	}
+	return userID, nil
+}
+
+

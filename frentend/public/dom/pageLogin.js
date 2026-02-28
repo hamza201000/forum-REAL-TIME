@@ -1,5 +1,6 @@
 import { createRegister } from "./pageRegister.js"
-
+import { checkUser,toLowerObject } from "./validation.js"
+import { sendData } from "./api.js"
 
 export function createLogin() {
     const app = document.getElementById("app")
@@ -8,16 +9,16 @@ export function createLogin() {
 
 <div class='field'>
 
-<div class='field Email'>
+<div class='field user'>
     
     <label>Email or username</label>
-    <input id='Email' type='text'>
+    <input id='Email' type='text' name ='user'>
 </div>
 
 
-<div class='field Password'>
+<div class='field password'>
     <label>Password</label>
-    <input id='Password' type='password'>
+    <input id='Password' type='password' name ='password'>
 </div>
 
 </div>
@@ -40,7 +41,7 @@ export function createLogin() {
         e.preventDefault()
         const form = document.getElementById("userForm")
         const formData = new FormData(form)
-        const data = toLowerObject(Object.fromEntries(formData.entries()))
+        const data = (Object.fromEntries(formData.entries()))
         if (!checkUser("login", data)) {
             return
         }

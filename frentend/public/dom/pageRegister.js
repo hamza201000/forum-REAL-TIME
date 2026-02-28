@@ -55,7 +55,7 @@ export function createRegister() {
         e.preventDefault()
         const form = document.getElementById("userForm")
         const formData = new FormData(form)
-        const data = toLowerObject(Object.fromEntries(formData.entries()))
+        const data = (Object.fromEntries(formData.entries()))
         if (!checkUser("register", data)) {
             return
         }

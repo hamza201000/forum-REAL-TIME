@@ -26,6 +26,18 @@ export async function sendData(data,route) {
                 return;
             }
         }
+        console.log(res.status);
+        
+        if (res.status === 401) {
+            console.log(result.error);
+            showError(result.error, ".password");
+            return;
+        }
+        if (res.status === 404) {   
+            console.log(result.error);
+            showError(result.error, ".user");
+            return;
+        }
         if (!res.ok) {
             console.log('internal server');
             return

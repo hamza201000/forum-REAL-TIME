@@ -1,13 +1,15 @@
 package repository
 
 import (
-	"crypto/rand"
 	"database/sql"
-	"encoding/hex"
 	"errors"
 	"strings"
+	"time"
 
 	"backend/models"
+
+	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type Userepository struct {
@@ -20,7 +22,8 @@ func NewUserRepository(database *sql.DB) *Userepository {
 
 func (r *Userepository) CreateUser(user models.User) error {
 	query := "INSERT INTO users (firstname, lastname, username, age, gender, email, password) VALUES (?, ?, ?, ?, ?, ?, ?)"
-
+	user.Email = strings.ToLower(strings.TrimSpace(user.Email))
+	user.Nickname = strings.ToLower(strings.TrimSpace(user.Nickname))
 	_, err := r.Db.Exec(query, user.Firstname, user.Lastname, user.Nickname, user.Age, user.Gender, user.Email, user.Password)
 	if err != nil {
 		if strings.Contains(err.Error(), "UNIQUE") {
@@ -35,23 +38,41 @@ func (r *Userepository) CreateUser(user models.User) error {
 	return nil
 }
 
-func GenerateToken() string {
-	bytes := make([]byte, 32)
-	_, err := rand.Read(bytes)
+func (r *Userepository) GetUserId(user models.LoginRequest) (int, error) {
+	var userID int
+	query := "SELECT id FROM users WHERE email = ? OR username = ? LIMIT 1"
+	err := r.Db.QueryRow(query, user.Username, user.Username).Scan(&userID)
 	if err != nil {
-		return ""
+		if err == sql.ErrNoRows {
+			return 0, errors.New("user not found")
+		}
+		return 0, err
 	}
-	return hex.EncodeToString(bytes)
+	query = "SELECT password FROM users WHERE id = ?"
+	var hashedPassword string
+	err = r.Db.QueryRow(query, userID).Scan(&hashedPassword)
+	if err != nil {
+		return 0, err
+	}
+	hashPasswordUser, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return 0, errors.New("failed to hash password")
+	}
+	if string(hashPasswordUser) != hashedPassword {
+		return 0, errors.New("invalid password")
+	}
+	return userID, nil
 }
 
-func (r *Userepository) CreateSession(session models.Session) error {
-	var userID int
-	err := r.Db.QueryRow("SELECT id FROM users WHERE email = ?", session.UserID).Scan(&userID)
-	if err != nil {
-		return errors.New("user not found")
-	}
-	session.UserID = userID
+func (r *Userepository) CreateSession(userID int) (*models.Session, error) {
+	var  userSession models.Session
+	userSession.UserID = userID
+	userSession.Token = uuid.NewString()
+	userSession.ExpiresAt = time.Now().Add(1 * time.Hour)
 	query := "INSERT INTO sessions (user_id, token, expires_at) VALUES (?, ?, ?)"
-	_, err = r.Db.Exec(query, session.UserID, session.Token, session.ExpiresAt)
-	return err
+	_, err := r.Db.Exec(query, userID, userSession.Token, userSession.ExpiresAt)
+	if err != nil {
+		return nil, err
+	}
+	return &userSession, nil
 }

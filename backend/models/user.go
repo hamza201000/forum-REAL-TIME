@@ -18,12 +18,11 @@ type Session struct {
 	Id        int
 	UserID    int
 	Token     string
-	createdAt time.Time
+	CreatedAt time.Time
 	ExpiresAt time.Time
 }
 
 type LoginRequest struct {
-	Username string `json:"username"`
-	Email    string `json:"email"`
+	Username string `json:"user"`
 	Password string `json:"password"`
 }
