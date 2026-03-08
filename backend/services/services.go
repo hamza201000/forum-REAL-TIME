@@ -42,7 +42,6 @@ func (s *UserService) LoginUser(data models.LoginRequest) (int, error) {
 	if data.Password == "" {
 		return 0, errors.New("password is required")
 	}
-
 	userID, err := s.Repo.GetUserId(data)
 	if err != nil {
 		fmt.Println("Error getting user ID:", err)

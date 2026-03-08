@@ -6,12 +6,16 @@ import (
 	"net/http"
 	"strings"
 
+	"backend/middleware"
 	"backend/models"
 	"backend/services"
 )
 
+
+
 func RegisterHandler(svc *services.UserService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		
 		var data models.User
 		err := json.NewDecoder(r.Body).Decode(&data)
 		fmt.Println(data)
@@ -42,13 +46,17 @@ func RegisterHandler(svc *services.UserService) http.HandlerFunc {
 
 func LoginHandler(svc *services.UserService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+
+		
+
 		var data models.LoginRequest
 		err := json.NewDecoder(r.Body).Decode(&data)
 		if err != nil {
 			services.SenData(w, "error", "Invalid request body", http.StatusBadRequest)
 			return
 		}
-		userID,err := svc.LoginUser(data)
+
+		userID, err := svc.LoginUser(data)
 		if err != nil {
 			if strings.Contains(err.Error(), "user not found") {
 				services.SenData(w, "error", "User not found", http.StatusNotFound)
@@ -58,16 +66,16 @@ func LoginHandler(svc *services.UserService) http.HandlerFunc {
 				services.SenData(w, "error", "Invalid password", http.StatusUnauthorized)
 				return
 			}
-			
+
 			services.SenData(w, "error", "Failed to login user", http.StatusInternalServerError)
 			return
 		}
-			services.SenData(w, "message", "User logged in successfully", http.StatusOK)
-			session, err := svc.Repo.CreateSession(userID)
-			if err != nil {
-				services.SenData(w, "error", "Failed to create session", http.StatusInternalServerError)
-				return
-			}
-			services.SenData(w, "session", session, http.StatusOK)
+		session, err := svc.Repo.CreateSession(userID)
+		if err != nil {
+			services.SenData(w, "error", "Failed to create session", http.StatusInternalServerError)
+			return
+		}
+		middleware.SetSessionCookie(session, w)
+		services.SenData(w, "message", "User logged in successfully", http.StatusOK)
 	}
 }

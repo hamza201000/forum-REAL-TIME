@@ -1,21 +1,23 @@
 package services
 
 import (
-	"time"
-
 	"backend/models"
+	"context"
 )
+
+func WithSession(ctx context.Context, session *models.Session) context.Context {
+	return context.WithValue(ctx, "session", session)
+}
+
+func GetSession(ctx context.Context) (*models.Session, bool) {
+	session, ok := ctx.Value("session").(*models.Session)
+	return session, ok
+}
 
 type UserSession struct {
 	Session *models.Session
 }
 
-func NewDataSession(DataSession *models.Session) *UserSession {
+func NewUserSession(DataSession *models.Session) *UserSession {
 	return &UserSession{Session: DataSession}
-}
-
-func (s *UserSession) NewSession() bool {
-	s.Session.createdAt = time.Now()
-	s.Session.ExpiresAt = s.Session.createdAt.Add(24 * time.Hour)
-	return true
 }

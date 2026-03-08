@@ -40,32 +40,24 @@ func (r *Userepository) CreateUser(user models.User) error {
 
 func (r *Userepository) GetUserId(user models.LoginRequest) (int, error) {
 	var userID int
-	query := "SELECT id FROM users WHERE email = ? OR username = ? LIMIT 1"
-	err := r.Db.QueryRow(query, user.Username, user.Username).Scan(&userID)
+	var hashedPassword string
+	query := "SELECT id, password FROM users WHERE email = ? OR username = ? LIMIT 1"
+	err := r.Db.QueryRow(query, user.Username, user.Username).Scan(&userID, &hashedPassword)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return 0, errors.New("user not found")
 		}
 		return 0, err
 	}
-	query = "SELECT password FROM users WHERE id = ?"
-	var hashedPassword string
-	err = r.Db.QueryRow(query, userID).Scan(&hashedPassword)
+	err = bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(user.Password))
 	if err != nil {
-		return 0, err
-	}
-	hashPasswordUser, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
-	if err != nil {
-		return 0, errors.New("failed to hash password")
-	}
-	if string(hashPasswordUser) != hashedPassword {
 		return 0, errors.New("invalid password")
 	}
 	return userID, nil
 }
 
 func (r *Userepository) CreateSession(userID int) (*models.Session, error) {
-	var  userSession models.Session
+	var userSession models.Session
 	userSession.UserID = userID
 	userSession.Token = uuid.NewString()
 	userSession.ExpiresAt = time.Now().Add(1 * time.Hour)
@@ -75,4 +67,25 @@ func (r *Userepository) CreateSession(userID int) (*models.Session, error) {
 		return nil, err
 	}
 	return &userSession, nil
+}
+
+func (r *Userepository) ValidateSession(token string) (*models.Session, error) {
+	var session models.Session
+
+	query := "SELECT user_id, token, expires_at FROM sessions WHERE token = ? LIMIT 1"
+	err := r.Db.QueryRow(query, token).Scan(&session.UserID, &session.Token, &session.ExpiresAt)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, errors.New("session not found")
+		}
+		return nil, err
+	}
+	if session.ExpiresAt.Before(time.Now()) {
+		_, err := r.Db.Exec("DELETE FROM sessions WHERE token = ?", session.Token)
+		if err != nil {
+			return nil, errors.New("server error")
+		}
+		return nil, errors.New("session expired")
+	}
+	return &session, nil
 }
