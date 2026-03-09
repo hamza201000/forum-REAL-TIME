@@ -1,7 +1,7 @@
 
-import { createLogin } from "./pageLogin.js"
 import { sendData } from "./api.js"
-import { checkUser, toLowerObject } from "./validation.js"
+import { checkUser } from "./validation.js"
+import { navigateTo } from "./router.js"
 export function createRegister() {
     const app = document.getElementById("app")
     app.innerHTML = `<form id="userForm" class="card">
@@ -37,7 +37,7 @@ export function createRegister() {
     </div>
     <div class="field Email">
         <label>Email</label>
-        <input id="Email" type="text"   name="email" >
+        <input id="Email" type="email"   name="email" >
     </div>
     <div class="field Password">
         <label>Password</label>
@@ -46,7 +46,7 @@ export function createRegister() {
    
     <button class="btn" type="submit">Create account</button>
     <p class="login-link">Already have an account?
-    <a href="#" id="login-link">Sign in</a>
+    <a href="" id="login-link">Sign in</a>
     </p>
 </form>`
 
@@ -59,15 +59,17 @@ export function createRegister() {
         if (!checkUser("register", data)) {
             return
         }
-        sendData(data, "/register")
+        sendData(data, "/api/register")
     })
 
+    const loginlink = document.getElementById("login-link")
+    if (loginlink) {
+        loginlink.addEventListener("click", function (e) {
+            e.preventDefault();
+            navigateTo('/login');
+        });
+    }
 
-    const loginLink = document.getElementById("login-link")
-    loginLink.addEventListener("click", function (e) {
-        e.preventDefault()
-        createLogin()
-    })
 }
 
 

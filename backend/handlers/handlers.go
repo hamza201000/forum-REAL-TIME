@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"strings"
 
 	"backend/middleware"
@@ -11,11 +12,20 @@ import (
 	"backend/services"
 )
 
-
+func HomeHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		content, err := os.ReadFile("../frentend/public/index.html")
+		if err != nil {
+			http.Error(w, "Not found", http.StatusNotFound)
+			return
+		}
+		w.Header().Set("Content-Type", "text/html")
+		w.Write(content)
+	}
+}
 
 func RegisterHandler(svc *services.UserService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		
 		var data models.User
 		err := json.NewDecoder(r.Body).Decode(&data)
 		fmt.Println(data)
@@ -46,9 +56,9 @@ func RegisterHandler(svc *services.UserService) http.HandlerFunc {
 
 func LoginHandler(svc *services.UserService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-
-		
-
+		if r.Method == http.MethodGet {
+			return
+		}
 		var data models.LoginRequest
 		err := json.NewDecoder(r.Body).Decode(&data)
 		if err != nil {
@@ -78,4 +88,16 @@ func LoginHandler(svc *services.UserService) http.HandlerFunc {
 		middleware.SetSessionCookie(session, w)
 		services.SenData(w, "message", "User logged in successfully", http.StatusOK)
 	}
+}
+
+func SessionHandler() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		session, _ := services.GetSession(r.Context())
+		w.WriteHeader(http.StatusOK)
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"userID":    session.UserID,
+			"expiresAt": session.ExpiresAt,
+		})
+	})
 }

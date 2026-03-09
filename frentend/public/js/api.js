@@ -42,10 +42,10 @@ export async function sendData(data,route) {
             console.log('internal server');
             return
         }
-        if (route === "/register") {
+        if (route === "/api/register") {
             console.log('user created successfully');
             createLogin()
-        }else if (route === "/login") {
+        }else if (route === "/api/login") {
             console.log('user logged in successfully');
             // youness here you can redirect the user to the home page or dashboard here
             // localStorage.setItem("token", result.token)

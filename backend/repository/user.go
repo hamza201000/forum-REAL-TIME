@@ -71,9 +71,8 @@ func (r *Userepository) CreateSession(userID int) (*models.Session, error) {
 
 func (r *Userepository) ValidateSession(token string) (*models.Session, error) {
 	var session models.Session
-
-	query := "SELECT user_id, token, expires_at FROM sessions WHERE token = ? LIMIT 1"
-	err := r.Db.QueryRow(query, token).Scan(&session.UserID, &session.Token, &session.ExpiresAt)
+	query := "SELECT user_id, token, created_at, expires_at FROM sessions WHERE token = ? LIMIT 1"
+	err := r.Db.QueryRow(query, token).Scan(&session.UserID, &session.Token, &session.CreatedAt, &session.ExpiresAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, errors.New("session not found")

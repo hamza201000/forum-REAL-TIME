@@ -12,8 +12,8 @@ func AuthMiddleware(next http.Handler, svc *services.UserService) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		cookie, err := r.Cookie("session_token")
 		if err != nil || cookie.Value == "" {
-			// services.SenData(w, "error", "Unauthorized", http.StatusSeeOther)
-			http.Redirect(w, r, "/login", http.StatusSeeOther)
+			services.SenData(w, "error", "Unaiuthorized", http.StatusSeeOther)
+			// http.Redirect(w, r, "/login", http.StatusSeeOther)
 			return
 		}
 		sessionToken := cookie.Value
@@ -21,7 +21,7 @@ func AuthMiddleware(next http.Handler, svc *services.UserService) http.Handler {
 		if err != nil || session == nil {
 			ClearSessionCookie(w)
 			services.SenData(w, "error", "Unauthorized", http.StatusUnauthorized)
-			http.Redirect(w, r, "/login", http.StatusSeeOther)
+			// http.Redirect(w, r, "/login", http.StatusSeeOther)
 			return
 		}
 		fmt.Println(session.UserID, session.CreatedAt, "you have a ssesion")
@@ -48,5 +48,4 @@ func SetSessionCookie(session *models.Session, w http.ResponseWriter) {
 		HttpOnly: true,
 		MaxAge:   3600, // 1 hours
 	})
-
 }

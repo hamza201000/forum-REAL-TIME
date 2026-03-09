@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"net/http"
 
 	"backend/db"
@@ -10,6 +11,8 @@ import (
 func main() {
 	DB := db.InitDB()
 	defer DB.Close()
-	routes.RegisterRoutes(DB)
-	http.ListenAndServe(":8080", nil)
+	handler := routes.RegisterRoutes(DB)
+	if err := http.ListenAndServe(":8080", handler); err != nil {
+		log.Fatal("error starting server : %v", err)
+	}
 }
