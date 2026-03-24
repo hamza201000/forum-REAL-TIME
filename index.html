@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>">
+  <title>Forum</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    /* ═══════════════════════════════════════
+       TOKENS & RESET
+    ═══════════════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #080808;
+      --surface:   #101010;
+      --surface2:  #161616;
+      --border:    #1f1f1f;
+      --border2:   #2a2a2a;
+      --text:      #e8e8e8;
+      --muted:     #4a4a4a;
+      --muted2:    #333;
+      --accent:    #4f7cff;
+      --accent-dim:rgba(79,124,255,.12);
+      --red:       #ef4444;
+      --red-dim:   rgba(239,68,68,.1);
+      --sidebar-w: 240px;
+      --navbar-h:  58px;
+      --radius:    12px;
+      --radius-lg: 18px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* ═══════════════════════════════════════
+       NAVBAR
+    ═══════════════════════════════════════ */
+    .navbar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: var(--navbar-h);
+      background: rgba(8,8,8,.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      z-index: 200;
+    }
+
+    .navbar-brand {
+      font-family: 'Syne', sans-serif;
+      font-size: 18px;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.5px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .navbar-brand::before {
+      content: '';
+      width: 8px; height: 8px;
+      background: var(--accent);
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .navbar-actions { display: flex; align-items: center; gap: 10px; }
+
+    .profile-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 6px 14px 6px 8px;
+      cursor: pointer;
+      color: #888;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      transition: border-color .2s, color .2s, background .2s;
+    }
+    .profile-btn:hover { border-color: var(--border2); color: var(--text); background: var(--surface2); }
+
+    .avatar {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), #7c5cfc);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700; color: #fff;
+      flex-shrink: 0;
+    }
+
+    .logout-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--muted);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      padding: 7px 14px;
+      cursor: pointer;
+      transition: border-color .2s, color .2s;
+    }
+    .logout-btn:hover { border-color: var(--red); color: var(--red); }
+
+    /* ═══════════════════════════════════════
+       LAYOUT SHELL
+    ═══════════════════════════════════════ */
+    .layout {
+      display: flex;
+      min-height: 100vh;
+      padding-top: var(--navbar-h);
+    }
+
+    /* ── LEFT SIDEBAR ── */
+    .left-bar {
+      position: fixed;
+      top: var(--navbar-h);
+      left: 0;
+      width: var(--sidebar-w);
+      height: calc(100vh - var(--navbar-h));
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      padding: 24px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      overflow-y: auto;
+      z-index: 100;
+      transition: transform .3s ease;
+    }
+
+    .sidebar-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 1.2px;
+      color: var(--muted);
+      text-transform: uppercase;
+      padding: 8px 10px 4px;
+      margin-top: 8px;
+    }
+
+    .sidebar-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 500;
+      transition: background .15s, color .15s;
+      border: 1px solid transparent;
+    }
+    .sidebar-item:hover { background: var(--surface2); color: var(--text); }
+    .sidebar-item.active { background: var(--accent-dim); color: var(--accent); border-color: rgba(79,124,255,.2); }
+
+    .sidebar-item svg { flex-shrink: 0; opacity: .7; }
+    .sidebar-item.active svg { opacity: 1; }
+
+    .sidebar-badge {
+      margin-left: auto;
+      background: var(--accent);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 20px;
+    }
+
+    /* ── RIGHT (CONTACTS) SIDEBAR ── */
+    .right-bar {
+      position: fixed;
+      top: var(--navbar-h);
+      right: 0;
+      width: 220px;
+      height: calc(100vh - var(--navbar-h));
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      z-index: 100;
+    }
+
+    .right-bar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 16px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .right-bar-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .8px;
+    }
+
+    .online-pill {
+      font-size: 11px;
+      background: rgba(34,197,94,.15);
+      color: #22c55e;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-weight: 600;
+    }
+
+    .contacts-list { overflow-y: auto; flex: 1; padding: 8px 0; }
+
+    .contact-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 14px;
+      cursor: pointer;
+      transition: background .15s;
+      border-radius: 0;
+    }
+    .contact-item:hover { background: var(--surface2); }
+
+    .contact-avatar-wrap { position: relative; flex-shrink: 0; }
+
+    .contact-avatar {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), #7c5cfc);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .status-dot {
+      position: absolute;
+      bottom: 0; right: 0;
+      width: 9px; height: 9px;
+      border-radius: 50%;
+      border: 2px solid var(--surface);
+    }
+    .status-dot.online  { background: #22c55e; }
+    .status-dot.offline { background: var(--muted2); }
+
+    .contact-name { font-size: 13px; color: var(--text); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .contact-time { font-size: 11px; color: var(--muted); flex-shrink: 0; }
+
+    .contacts-section-label {
+      font-size: 10px;
+      color: var(--muted2);
+      text-transform: uppercase;
+      letter-spacing: .8px;
+      padding: 10px 14px 4px;
+      font-weight: 600;
+    }
+
+    /* ── MAIN FEED ── */
+    .feed-wrapper {
+      flex: 1;
+      margin-left: var(--sidebar-w);
+      margin-right: 220px;
+      padding: 28px 28px 100px;
+      max-width: 100%;
+    }
+
+    .feed-inner {
+      max-width: 640px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* ── Stories bar ── */
+    .stories-bar {
+      display: flex;
+      gap: 10px;
+      padding: 4px 0 8px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .stories-bar::-webkit-scrollbar { display: none; }
+
+    .story-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 10px;
+      color: var(--muted);
+      min-width: 56px;
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    .story-ring {
+      width: 52px; height: 52px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), #7c5cfc);
+      padding: 2px;
+      position: relative;
+    }
+
+    .story-ring-inner {
+      width: 100%; height: 100%;
+      border-radius: 50%;
+      background: var(--surface2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; font-weight: 700; color: #fff;
+      border: 2px solid var(--surface);
+    }
+
+    .story-plus-icon {
+      position: absolute;
+      bottom: -2px; right: -2px;
+      width: 18px; height: 18px;
+      background: var(--accent);
+      color: #fff;
+      border-radius: 50%;
+      font-size: 13px;
+      line-height: 18px;
+      text-align: center;
+      border: 2px solid var(--bg);
+    }
+
+    /* ── Post card ── */
+    .post-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px 22px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      animation: fadeUp .35s ease both;
+      transition: border-color .2s, box-shadow .2s;
+    }
+
+    .post-card:hover {
+      border-color: var(--border2);
+      box-shadow: 0 8px 32px rgba(0,0,0,.35);
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .post-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .post-card-header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .post-avatar {
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), #7c5cfc);
+      color: #fff;
+      font-weight: 700;
+      font-size: 14px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      border: 2px solid var(--border2);
+    }
+
+    .post-username {
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--text);
+      display: block;
+      font-family: 'Syne', sans-serif;
+    }
+
+    .post-time {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 1px;
+      display: block;
+    }
+
+    .post-menu-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--muted2);
+      padding: 4px 8px;
+      border-radius: 8px;
+      transition: background .15s, color .15s;
+      display: flex; align-items: center;
+    }
+    .post-menu-btn:hover { background: var(--surface2); color: var(--muted); }
+
+    .post-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 0 -22px;
+    }
+
+    .post-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 17px;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1.35;
+      letter-spacing: -0.3px;
+    }
+
+    .post-body {
+      font-size: 14px;
+      color: #888;
+      line-height: 1.75;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .post-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 11px;
+      color: var(--muted2);
+    }
+
+    .post-meta span { display: flex; align-items: center; gap: 4px; }
+
+    .post-tag {
+      margin-left: auto;
+      background: var(--accent-dim);
+      color: var(--accent);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 10px;
+      border-radius: 20px;
+    }
+
+    .post-actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding-top: 8px;
+      border-top: 1px solid var(--border);
+      margin: 0 -2px;
+    }
+
+    .like-btn, .comment-icon-btn, .share-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 13px;
+      color: var(--muted);
+      padding: 7px 12px;
+      border-radius: 10px;
+      transition: color .15s, background .15s;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 500;
+    }
+
+    .like-btn:hover          { background: var(--red-dim); color: var(--red); }
+    .comment-icon-btn:hover  { background: var(--surface2); color: #888; }
+    .share-btn:hover         { background: var(--accent-dim); color: var(--accent); }
+    .like-btn.liked          { color: var(--red); }
+    .like-btn.liked svg      { fill: var(--red); stroke: var(--red); }
+
+    .post-actions .share-btn { margin-left: auto; }
+
+    /* ── FAB ── */
+    .fab {
+      position: fixed;
+      bottom: 28px;
+      right: 248px;
+      width: 52px; height: 52px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(79,124,255,.45);
+      display: flex; align-items: center; justify-content: center;
+      transition: transform .15s, box-shadow .15s;
+      z-index: 150;
+    }
+    .fab:hover { transform: scale(1.08); box-shadow: 0 6px 28px rgba(79,124,255,.55); }
+    .fab:active { transform: scale(0.95); }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.65);
+      backdrop-filter: blur(6px);
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      z-index: 300;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s;
+    }
+    .modal-overlay.active { opacity: 1; pointer-events: all; }
+
+    .modal-card {
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      width: 100%;
+      max-width: 560px;
+      border-radius: 20px 20px 0 0;
+      padding: 22px 22px 36px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      transform: translateY(60px);
+      transition: transform .3s cubic-bezier(.34,1.26,.64,1);
+    }
+
+    .modal-overlay.active .modal-card { transform: translateY(0); }
+
+    @media (min-width: 640px) {
+      .modal-overlay { align-items: center; }
+      .modal-card {
+        border-radius: 20px;
+        transform: translateY(20px) scale(.97);
+      }
+      .modal-overlay.active .modal-card { transform: translateY(0) scale(1); }
+    }
+
+    .modal-header { display: flex; align-items: center; gap: 10px; }
+
+    .modal-avatar {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), #7c5cfc);
+      color: #fff; font-weight: 700; font-size: 14px;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .modal-username {
+      font-family: 'Syne', sans-serif;
+      font-weight: 600; font-size: 15px; flex: 1; color: var(--text);
+    }
+
+    .modal-close {
+      background: none; border: none; font-size: 16px; cursor: pointer;
+      color: var(--muted); padding: 4px 8px; border-radius: 8px;
+      transition: background .15s, color .15s;
+    }
+    .modal-close:hover { background: var(--surface2); color: #888; }
+
+    .modal-field { display: flex; flex-direction: column; gap: 4px; }
+
+    .modal-field input,
+    .modal-field textarea {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border2);
+      border-radius: 12px;
+      padding: 11px 14px;
+      font-size: 14px;
+      resize: none;
+      outline: none;
+      color: var(--text);
+      transition: border-color .15s;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .modal-field textarea { min-height: 110px; }
+    .modal-field input::placeholder,
+    .modal-field textarea::placeholder { color: var(--muted2); }
+    .modal-field input:focus,
+    .modal-field textarea:focus { border-color: var(--accent); }
+
+    .char-count {
+      text-align: right; font-size: 11px; color: var(--muted2);
+      margin-top: 3px; transition: color .2s;
+    }
+    .char-count.warn { color: var(--red); }
+
+    .modal-actions { display: flex; justify-content: flex-end; }
+
+    .modal-publish-btn {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 30px;
+      font-family: 'Syne', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      padding: 11px 32px;
+      cursor: pointer;
+      transition: opacity .2s, transform .15s;
+    }
+    .modal-publish-btn:hover { opacity: .88; transform: scale(1.02); }
+
+    /* ── Mobile hamburger overlay ── */
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.55);
+      z-index: 99;
+    }
+    .sidebar-overlay.open { display: block; }
+
+    .hamburger {
+      display: none;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text);
+      padding: 4px;
+    }
+
+    /* ═══════════════════════════════════════
+       AUTH CARD (kept for reference)
+    ═══════════════════════════════════════ */
+    .page {
+      min-height: 100vh;
+      padding-top: var(--navbar-h);
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .card {
+      width: 100%; max-width: 460px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 32px;
+      margin: 20px;
+      animation: fadeUp .5s ease both;
+    }
+
+    /* ═══════════════════════════════════════
+       RESPONSIVE
+    ═══════════════════════════════════════ */
+
+    /* ── Tablet ≤ 1100px: hide right sidebar ── */
+    @media (max-width: 1100px) {
+      .right-bar { display: none; }
+      .feed-wrapper { margin-right: 0; }
+      .fab { right: 24px; }
+    }
+
+    /* ── Tablet ≤ 860px: collapse left sidebar ── */
+    @media (max-width: 860px) {
+      .left-bar {
+        transform: translateX(-100%);
+        box-shadow: 4px 0 24px rgba(0,0,0,.5);
+      }
+      .left-bar.open { transform: translateX(0); }
+      .hamburger { display: flex; }
+      .feed-wrapper { margin-left: 0; }
+      .fab { right: 20px; bottom: 24px; }
+    }
+
+    /* ── Mobile ≤ 600px ── */
+    @media (max-width: 600px) {
+      :root { --navbar-h: 52px; }
+
+      .navbar { padding: 0 14px; }
+      .navbar-brand { font-size: 16px; }
+      .navbar-actions { gap: 8px; }
+
+      /* hide username text in profile btn */
+      .profile-btn .profile-label { display: none; }
+      .profile-btn { padding: 6px 10px; }
+
+      .logout-btn { font-size: 12px; padding: 6px 10px; }
+
+      .feed-wrapper { padding: 16px 10px 90px; }
+      .feed-inner { gap: 12px; }
+
+      .post-card { padding: 14px 14px 12px; border-radius: 14px; gap: 10px; }
+      .post-divider { margin: 0 -14px; }
+      .post-title { font-size: 15px; }
+      .post-body { font-size: 13px; }
+      .post-avatar { width: 34px; height: 34px; font-size: 13px; }
+      .post-username { font-size: 13px; }
+
+      .like-btn, .comment-icon-btn, .share-btn {
+        font-size: 12px; padding: 6px 8px; gap: 4px;
+      }
+
+      .story-ring { width: 46px; height: 46px; }
+      .story-ring-inner { font-size: 18px; }
+
+      /* Modal bottom sheet on mobile */
+      .modal-card { padding: 16px 14px 30px; border-radius: 18px 18px 0 0; }
+      .modal-publish-btn { width: 100%; text-align: center; }
+      .modal-actions { justify-content: stretch; }
+
+      .fab { width: 48px; height: 48px; bottom: 20px; right: 16px; }
+    }
+
+    /* ── Very small ≤ 380px ── */
+    @media (max-width: 380px) {
+      .like-btn span, .comment-icon-btn span, .share-btn span { display: none; }
+      .like-btn, .comment-icon-btn, .share-btn { padding: 7px 10px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════ NAVBAR ═══════════ -->
+<nav class="navbar">
+  <div style="display:flex;align-items:center;gap:12px;">
+    <button class="hamburger" id="hamburger-btn" aria-label="Menu">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+      </svg>
+    </button>
+    <span class="navbar-brand" id="nav-home">Forum</span>
+  </div>
+  <div class="navbar-actions">
+    <button class="profile-btn" id="profile-btn">
+      <div class="avatar" id="nav-avatar">G</div>
+      <span class="profile-label" id="nav-username">goku</span>
+    </button>
+    <button class="logout-btn" id="logout-btn">Log out</button>
+  </div>
+</nav>
+
+<!-- ═══════════ LAYOUT ═══════════ -->
+<div class="layout">
+
+  <!-- Left Sidebar -->
+  <aside class="left-bar" id="left-bar">
+    <div class="sidebar-label">Navigation</div>
+
+    <div class="sidebar-item active">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Feed
+    </div>
+
+    <div class="sidebar-item">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      Explore
+    </div>
+
+    <div class="sidebar-item">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      Messages
+      <span class="sidebar-badge">3</span>
+    </div>
+
+    <div class="sidebar-item">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      Notifications
+    </div>
+
+    <div class="sidebar-label">Account</div>
+
+    <div class="sidebar-item">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Profile
+    </div>
+
+    <div class="sidebar-item">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Settings
+    </div>
+  </aside>
+
+  <!-- Sidebar overlay (mobile) -->
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <!-- ── MAIN FEED ── -->
+  <main class="feed-wrapper">
+    <div class="feed-inner" id="feed-list">
+
+      <!-- Stories -->
+      <div class="stories-bar">
+        <button class="story-btn">
+          <div class="story-ring">
+            <div class="story-ring-inner">G</div>
+            <span class="story-plus-icon">+</span>
+          </div>
+          Your story
+        </button>
+        <button class="story-btn">
+          <div class="story-ring" style="background:linear-gradient(135deg,#f97316,#ec4899)">
+            <div class="story-ring-inner">A</div>
+          </div>
+          Alice
+        </button>
+        <button class="story-btn">
+          <div class="story-ring" style="background:linear-gradient(135deg,#22c55e,#14b8a6)">
+            <div class="story-ring-inner">B</div>
+          </div>
+          Bob
+        </button>
+        <button class="story-btn">
+          <div class="story-ring" style="background:linear-gradient(135deg,#a855f7,#6366f1)">
+            <div class="story-ring-inner">C</div>
+          </div>
+          Carlos
+        </button>
+      </div>
+
+      <!-- Post cards -->
+      <article class="post-card" data-index="3">
+        <div class="post-card-header">
+          <div class="post-card-header-left">
+            <div class="post-avatar">G</div>
+            <div>
+              <span class="post-username">goku</span>
+              <span class="post-time">2 hours ago</span>
+            </div>
+          </div>
+          <button class="post-menu-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+          </button>
+        </div>
+        <div class="post-divider"></div>
+        <h2 class="post-title">hamza</h2>
+        <p class="post-body">hai bqfdqfkqhfkj qsjdhqkshd</p>
+        <div class="post-meta">
+          <span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            24 views
+          </span>
+          <span>·</span>
+          <span>1 min read</span>
+          <span class="post-tag">General</span>
+        </div>
+        <div class="post-actions">
+          <button class="like-btn" data-idx="3">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            <span>0 Likes</span>
+          </button>
+          <button class="comment-icon-btn">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <span>Comment</span>
+          </button>
+          <button class="share-btn">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            <span>Share</span>
+          </button>
+        </div>
+      </article>
+
+      <article class="post-card" data-index="2">
+        <div class="post-card-header">
+          <div class="post-card-header-left">
+            <div class="post-avatar">G</div>
+            <div>
+              <span class="post-username">goku</span>
+              <span class="post-time">5 hours ago</span>
+            </div>
+          </div>
+          <button class="post-menu-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+          </button>
+        </div>
+        <div class="post-divider"></div>
+        <h2 class="post-title">hhhh</h2>
+        <p class="post-body">hhhh</p>
+        <div class="post-meta">
+          <span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            49 views
+          </span>
+          <span>·</span>
+          <span>1 min read</span>
+          <span class="post-tag">Discussion</span>
+        </div>
+        <div class="post-actions">
+          <button class="like-btn" data-idx="2">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            <span>0 Likes</span>
+          </button>
+          <button class="comment-icon-btn">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <span>Comment</span>
+          </button>
+          <button class="share-btn">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            <span>Share</span>
+          </button>
+        </div>
+      </article>
+
+      <article class="post-card" data-index="1">
+        <div class="post-card-header">
+          <div class="post-card-header-left">
+            <div class="post-avatar">G</div>
+            <div>
+              <span class="post-username">goku</span>
+              <span class="post-time">Yesterday</span>
+            </div>
+          </div>
+          <button class="post-menu-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+          </button>
+        </div>
+        <div class="post-divider"></div>
+        <h2 class="post-title">kkf</h2>
+        <p class="post-body">kfk,f,</p>
+        <div class="post-meta">
+          <span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            93 views
+          </span>
+          <span>·</span>
+          <span>1 min read</span>
+          <span class="post-tag">General</span>
+        </div>
+        <div class="post-actions">
+          <button class="like-btn" data-idx="1">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            <span>0 Likes</span>
+          </button>
+          <button class="comment-icon-btn">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <span>Comment</span>
+          </button>
+          <button class="share-btn">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            <span>Share</span>
+          </button>
+        </div>
+      </article>
+
+      <article class="post-card" data-index="0">
+        <div class="post-card-header">
+          <div class="post-card-header-left">
+            <div class="post-avatar">G</div>
+            <div>
+              <span class="post-username">goku</span>
+              <span class="post-time">2 days ago</span>
+            </div>
+          </div>
+          <button class="post-menu-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+          </button>
+        </div>
+        <div class="post-divider"></div>
+        <h2 class="post-title">jjajaj</h2>
+        <p class="post-body">jjajajaj</p>
+        <div class="post-meta">
+          <span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            45 views
+          </span>
+          <span>·</span>
+          <span>1 min read</span>
+          <span class="post-tag">General</span>
+        </div>
+        <div class="post-actions">
+          <button class="like-btn" data-idx="0">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            <span>0 Likes</span>
+          </button>
+          <button class="comment-icon-btn">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <span>Comment</span>
+          </button>
+          <button class="share-btn">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            <span>Share</span>
+          </button>
+        </div>
+      </article>
+
+    </div>
+  </main>
+
+  <!-- Right contacts sidebar -->
+  <aside class="right-bar">
+    <div class="right-bar-header">
+      <span class="right-bar-title">Contacts</span>
+      <span class="online-pill" id="online-count">3 online</span>
+    </div>
+    <div class="contacts-list">
+      <div id="online-contacts"></div>
+      <div id="offline-section">
+        <div class="contacts-section-label">Offline</div>
+        <div id="offline-contacts"></div>
+      </div>
+    </div>
+  </aside>
+
+</div>
+
+<!-- FAB -->
+<button class="fab" id="fab-btn" title="Create post">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+  </svg>
+</button>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal-card" id="modal-card">
+    <div class="modal-header">
+      <div class="modal-avatar">G</div>
+      <span class="modal-username">goku</span>
+      <button class="modal-close" id="modal-close">✕</button>
+    </div>
+    <div class="modal-field">
+      <input id="modal-title" type="text" placeholder="Post title…" maxlength="120" autocomplete="off">
+    </div>
+    <div class="modal-field">
+      <textarea id="modal-body" placeholder="What's on your mind?" maxlength="1000"></textarea>
+      <div class="char-count" id="modal-char-count">0 / 1000</div>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-publish-btn" id="modal-publish">Publish</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  /* ── Contacts sidebar ── */
+  const contacts = [
+    {name:'Alice',   online:true,  lastSeen:null,       color:'linear-gradient(135deg,#f97316,#ec4899)'},
+    {name:'Bob',     online:true,  lastSeen:null,       color:'linear-gradient(135deg,#22c55e,#14b8a6)'},
+    {name:'Carlos',  online:false, lastSeen:'5m ago',   color:'linear-gradient(135deg,#a855f7,#6366f1)'},
+    {name:'Diana',   online:true,  lastSeen:null,       color:'linear-gradient(135deg,#4f7cff,#7c5cfc)'},
+    {name:'Ethan',   online:false, lastSeen:'1h ago',   color:'linear-gradient(135deg,#f59e0b,#ef4444)'},
+    {name:'Fatima',  online:false, lastSeen:'3h ago',   color:'linear-gradient(135deg,#10b981,#3b82f6)'},
+  ];
+
+  function renderContacts() {
+    const online  = contacts.filter(c => c.online);
+    const offline = contacts.filter(c => !c.online);
+    document.getElementById('online-count').textContent = online.length + ' online';
+    document.getElementById('online-contacts').innerHTML = online.map(row).join('');
+    document.getElementById('offline-contacts').innerHTML = offline.map(row).join('');
+  }
+
+  function row(c) {
+    return `<div class="contact-item">
+      <div class="contact-avatar-wrap">
+        <div class="contact-avatar" style="background:${c.color}">${c.name[0]}</div>
+        <span class="status-dot ${c.online ? 'online' : 'offline'}"></span>
+      </div>
+      <span class="contact-name">${c.name}</span>
+      ${!c.online ? `<span class="contact-time">${c.lastSeen}</span>` : ''}
+    </div>`;
+  }
+
+  renderContacts();
+
+  /* ── Hamburger (mobile sidebar) ── */
+  const leftBar   = document.getElementById('left-bar');
+  const overlay   = document.getElementById('sidebar-overlay');
+  const hamburger = document.getElementById('hamburger-btn');
+
+  function toggleSidebar() {
+    leftBar.classList.toggle('open');
+    overlay.classList.toggle('open');
+  }
+
+  hamburger.addEventListener('click', toggleSidebar);
+  overlay.addEventListener('click', toggleSidebar);
+
+  /* ── FAB / Modal ── */
+  const modalOverlay = document.getElementById('modal-overlay');
+  const modalClose   = document.getElementById('modal-close');
+  const fabBtn       = document.getElementById('fab-btn');
+  const charCount    = document.getElementById('modal-char-count');
+  const modalBody    = document.getElementById('modal-body');
+
+  fabBtn.addEventListener('click', () => modalOverlay.classList.add('active'));
+  modalClose.addEventListener('click', () => modalOverlay.classList.remove('active'));
+  modalOverlay.addEventListener('click', e => { if (e.target === modalOverlay) modalOverlay.classList.remove('active'); });
+
+  modalBody.addEventListener('input', () => {
+    const n = modalBody.value.length;
+    charCount.textContent = n + ' / 1000';
+    charCount.classList.toggle('warn', n > 900);
+  });
+
+  /* ── Like buttons ── */
+  document.querySelectorAll('.like-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const liked = btn.classList.toggle('liked');
+      const span  = btn.querySelector('span');
+      const cur   = parseInt(span.textContent) || 0;
+      span.textContent = (liked ? cur + 1 : Math.max(0, cur - 1)) + ' Likes';
+    });
+  });
+</script>
+
+</body>
+</html>

@@ -35,19 +35,20 @@ func (s *UserService) RegisterUser(user models.User) error {
 	return s.Repo.CreateUser(user)
 }
 
-func (s *UserService) LoginUser(data models.LoginRequest) (int, error) {
+func (s *UserService) LoginUser(data models.LoginRequest) (int, string, error) {
 	if data.Username == "" {
-		return 0, errors.New("email or username is required")
+		return 0, "", errors.New("email or username is required")
 	}
 	if data.Password == "" {
-		return 0, errors.New("password is required")
+		return 0, "", errors.New("password is required")
 	}
-	userID, err := s.Repo.GetUserId(data)
+	userID,username, err := s.Repo.GetUserId(data)
 	if err != nil {
 		fmt.Println("Error getting user ID:", err)
-		return 0, err
+		return 0, "", err
 	}
-	return userID, nil
+	return userID,username, nil
 }
+
 
 

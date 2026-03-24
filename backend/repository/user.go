@@ -3,6 +3,7 @@ package repository
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -38,31 +39,33 @@ func (r *Userepository) CreateUser(user models.User) error {
 	return nil
 }
 
-func (r *Userepository) GetUserId(user models.LoginRequest) (int, error) {
+func (r *Userepository) GetUserId(user models.LoginRequest) (int, string, error) {
 	var userID int
 	var hashedPassword string
-	query := "SELECT id, password FROM users WHERE email = ? OR username = ? LIMIT 1"
-	err := r.Db.QueryRow(query, user.Username, user.Username).Scan(&userID, &hashedPassword)
+	var username string
+	query := "SELECT id, password, username FROM users WHERE email = ? OR username = ? LIMIT 1"
+	err := r.Db.QueryRow(query, user.Username, user.Username).Scan(&userID, &hashedPassword, &username)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return 0, errors.New("user not found")
+			return 0, "", errors.New("user not found")
 		}
-		return 0, err
+		return 0, "", err
 	}
 	err = bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(user.Password))
 	if err != nil {
-		return 0, errors.New("invalid password")
+		return 0, "", errors.New("invalid password")
 	}
-	return userID, nil
+	return userID, username, nil
 }
 
-func (r *Userepository) CreateSession(userID int) (*models.Session, error) {
+func (r *Userepository) CreateSession(userID int, username string) (*models.Session, error) {
 	var userSession models.Session
 	userSession.UserID = userID
+	userSession.Username = username
 	userSession.Token = uuid.NewString()
 	userSession.ExpiresAt = time.Now().Add(1 * time.Hour)
-	query := "INSERT INTO sessions (user_id, token, expires_at) VALUES (?, ?, ?)"
-	_, err := r.Db.Exec(query, userID, userSession.Token, userSession.ExpiresAt)
+	query := "INSERT INTO sessions (user_id, username, token, expires_at) VALUES (?, ?, ?, ?)"
+	_, err := r.Db.Exec(query, userID, userSession.Username, userSession.Token, userSession.ExpiresAt)
 	if err != nil {
 		return nil, err
 	}
@@ -71,8 +74,9 @@ func (r *Userepository) CreateSession(userID int) (*models.Session, error) {
 
 func (r *Userepository) ValidateSession(token string) (*models.Session, error) {
 	var session models.Session
-	query := "SELECT user_id, token, created_at, expires_at FROM sessions WHERE token = ? LIMIT 1"
-	err := r.Db.QueryRow(query, token).Scan(&session.UserID, &session.Token, &session.CreatedAt, &session.ExpiresAt)
+	query := "SELECT user_id, username, token, created_at, expires_at FROM sessions WHERE token = ? LIMIT 1"
+	err := r.Db.QueryRow(query, token).Scan(&session.UserID, &session.Username, &session.Token, &session.CreatedAt, &session.ExpiresAt)
+	fmt.Println(err)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, errors.New("session not found")
@@ -87,4 +91,44 @@ func (r *Userepository) ValidateSession(token string) (*models.Session, error) {
 		return nil, errors.New("session expired")
 	}
 	return &session, nil
+}
+
+func (r *Userepository) DeleteSession(token string) error {
+	_, err := r.Db.Exec("DELETE FROM sessions WHERE token = ?", token)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *Userepository) CreatePost(post models.Post) error {
+	query := "INSERT INTO posts (user_id,username, title, content) VALUES (?, ?, ?, ?)"
+	_, err := r.Db.Exec(query, post.UserID, post.Username, post.Title, post.Content)
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	return nil
+}
+func (r *Userepository) GetAllPost() ([]models.Post, error) {
+	var posts []models.Post
+	query := "SELECT id , user_id, username, title, content, created_at FROM posts"
+	rows, err := r.Db.Query(query)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+
+		var post models.Post
+		err = rows.Scan(&post.ID, &post.UserID, &post.Username, &post.Title, &post.Content, &post.CreatedAt)
+		if err != nil {
+			return nil, err
+		}
+		
+		posts = append(posts, post)
+	}
+	return posts, nil
 }

@@ -24,7 +24,7 @@ func AuthMiddleware(next http.Handler, svc *services.UserService) http.Handler {
 			// http.Redirect(w, r, "/login", http.StatusSeeOther)
 			return
 		}
-		fmt.Println(session.UserID, session.CreatedAt, "you have a ssesion")
+		fmt.Println(session.UserID,session.Username, session.CreatedAt, "you have a ssesion")
 		r = r.WithContext(services.WithSession(r.Context(), session))
 		next.ServeHTTP(w, r)
 	})
@@ -32,7 +32,7 @@ func AuthMiddleware(next http.Handler, svc *services.UserService) http.Handler {
 
 func ClearSessionCookie(w http.ResponseWriter) {
 	http.SetCookie(w, &http.Cookie{
-		Name:   "session_id",
+		Name:   "session_token",
 		Value:  "",
 		Path:   "/",
 		MaxAge: -1,

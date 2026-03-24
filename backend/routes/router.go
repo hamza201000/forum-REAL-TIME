@@ -24,7 +24,12 @@ func RegisterRoutes(DB *sql.DB) http.Handler {
 	// Register API routes
 	mux.Handle("/api/register", handlers.RegisterHandler(userService)) // Handle /register POST requests
 	mux.Handle("/api/login", handlers.LoginHandler(userService))       // Handle /login POST requests
-	mux.Handle("/api/session",middleware.AuthMiddleware( handlers.SessionHandler(),userService))
+	mux.Handle("/api/session", middleware.AuthMiddleware(handlers.SessionHandler(), userService))
+	mux.Handle("/api/logout", handlers.LogoutHandler(userService))
+	mux.Handle("/api/posts", middleware.AuthMiddleware(handlers.PostsHandler(userService), userService))
+
+	mux.Handle("/api/getPosts", handlers.GetPost(userService))
+
 	// Optionally serve the index.html (or other entry point) for the root path (/)
 	mux.Handle("/", (handlers.HomeHandler()))
 	return mux

@@ -66,7 +66,7 @@ func LoginHandler(svc *services.UserService) http.HandlerFunc {
 			return
 		}
 
-		userID, err := svc.LoginUser(data)
+		userID, username, err := svc.LoginUser(data)
 		if err != nil {
 			if strings.Contains(err.Error(), "user not found") {
 				services.SenData(w, "error", "User not found", http.StatusNotFound)
@@ -80,12 +80,13 @@ func LoginHandler(svc *services.UserService) http.HandlerFunc {
 			services.SenData(w, "error", "Failed to login user", http.StatusInternalServerError)
 			return
 		}
-		session, err := svc.Repo.CreateSession(userID)
+		session, err := svc.Repo.CreateSession(userID, username)
 		if err != nil {
 			services.SenData(w, "error", "Failed to create session", http.StatusInternalServerError)
 			return
 		}
 		middleware.SetSessionCookie(session, w)
+
 		services.SenData(w, "message", "User logged in successfully", http.StatusOK)
 	}
 }
@@ -93,11 +94,68 @@ func LoginHandler(svc *services.UserService) http.HandlerFunc {
 func SessionHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		session, _ := services.GetSession(r.Context())
+		fmt.Println(session.Username, session.UserID)
 		w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		json.NewEncoder(w).Encode(map[string]any{
 			"userID":    session.UserID,
+			"username":  session.Username,
 			"expiresAt": session.ExpiresAt,
 		})
+	})
+}
+
+func LogoutHandler(svc *services.UserService) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		cookie, _ := r.Cookie("session_token")
+		svc.Repo.DeleteSession(cookie.Value)
+		middleware.ClearSessionCookie(w)
+		services.SenData(w, "message", "User logged out successfully", http.StatusOK)
+	})
+}
+
+func PostsHandler(svc *services.UserService) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			services.SenData(w, "message", "Posts endpoint is working", http.StatusOK)
+			return
+		}
+
+		var data models.Post
+		err := json.NewDecoder(r.Body).Decode(&data)
+		if err != nil {
+			services.SenData(w, "error", "Invalid request body", http.StatusBadRequest)
+			return
+		}
+		ctx := r.Context()
+		session, ok := services.GetSession(ctx)
+		if !ok {
+			fmt.Println(ok)
+			return
+		}
+		data.UserID = session.UserID
+		data.Username = session.Username
+		fmt.Println(data.UserID, data.Username)
+		err = svc.Repo.CreatePost(data)
+		if err != nil {
+			services.SenData(w, "message", "Intarnal servre", http.StatusInternalServerError)
+			return
+		}
+
+		fmt.Println(data)
+		services.SenData(w, "message", "Post created successfully", http.StatusOK)
+
+	})
+}
+
+func GetPost(svc *services.UserService) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		posts, err := svc.Repo.GetAllPost()
+		if err != nil {
+			services.SenData(w, "message", "Intarnal servre", http.StatusInternalServerError)
+		}
+
+		services.SenData(w, "allpost", posts, http.StatusOK)
 	})
 }

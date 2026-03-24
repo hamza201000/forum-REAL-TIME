@@ -1,6 +1,6 @@
 import { createRegister } from "./pageRegister.js";
 import { createLogin } from "./pageLogin.js";
-import { createPostPage } from "./pagePost.js";
+import { createFeedPage } from "./pagePost.js";
 const publicPages = ['/login', '/register']
 
 export async function router() {
@@ -12,14 +12,12 @@ export async function router() {
         navigateTo('/login')
         return
     }
-
     if (session && publicPages.includes(path)) {
         navigateTo('/')
         return
     }
-
     if (path == '/') {
-        createPostPage()
+        createFeedPage(session.username)
     } else if (path == '/login') {
         createLogin()
     } else if (path == '/register') {
