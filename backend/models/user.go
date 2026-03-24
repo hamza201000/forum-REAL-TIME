@@ -17,12 +17,13 @@ type User struct {
 }
 
 type Session struct {
-	Id        int
-	UserID    int
-	Username  string
-	Token     string
-	CreatedAt time.Time
-	ExpiresAt time.Time
+	Id        int   `jason:"id"`
+	UserID    int   `jason:"useriD"`
+	Username  string `jason:"username"`
+	Token     string  `jason:"token"`
+	CreatedAt time.Time `jason:"createat"`
+	ExpiresAt time.Time `jason:"expiresat"`
+	MessagePong string `json:"messagePong"`
 }
 
 type LoginRequest struct {
