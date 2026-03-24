@@ -2,7 +2,7 @@ import { sendData } from "./api.js";
 import { navigateTo } from "./router.js";
 
 export function createFeedPage(data) {
-  const app  = document.getElementById("app");
+  const app = document.getElementById("app");
   const user = data || "User";
   const avatar = (user || "U")[0].toUpperCase();
 
@@ -121,26 +121,41 @@ export function createFeedPage(data) {
 
   async function renderContacts() {
     try {
-      const res   = await sendData({}, "/api/online-users", "GET");
-      const users = res?.users ?? [];
+      const ws = new WebSocket("ws://localhost:8080/api/ws")
+      // const res = await sendData({}, "/api/online-users", "GET");
+      // const users = res && res.users ? res.users : [];
 
-      const online  = users.filter(u => u.online);
-      const offline = users.filter(u => !u.online);
+      setInterval(() => {
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send("ping")
+        }
+      }, 3000)
 
-      document.getElementById("online-count").textContent =
-        online.length + " online";
+      ws.onmessage = (event) => {
+        const msg = JSON.parse(event.data)
+      
+          console.log("server alive", msg);
+        
+      };
 
-      document.getElementById("online-contacts").innerHTML =
-        online.map(contactRow).join("");
 
-      const offlineSection = document.getElementById("offline-section");
-      if (offline.length > 0) {
-        document.getElementById("offline-contacts").innerHTML =
-          offline.map(contactRow).join("");
-        offlineSection.style.display = "";
-      } else {
-        offlineSection.style.display = "none";
-      }
+      // const online = users.filter(u => u.online);
+      // const offline = users.filter(u => !u.online);
+
+      // // document.getElementById("online-count").textContent =
+      // //   online.length + " online";
+
+      // document.getElementById("online-contacts").innerHTML =
+      //   online.map(contactRow).join("");
+
+      // const offlineSection = document.getElementById("offline-section");
+      // if (offline.length > 0) {
+      //   document.getElementById("offline-contacts").innerHTML =
+      //     offline.map(contactRow).join("");
+      //   offlineSection.style.display = "";
+      // } else {
+      //   offlineSection.style.display = "none";
+      // }
     } catch (err) {
       console.error("Failed to load contacts:", err);
     }
@@ -158,8 +173,8 @@ export function createFeedPage(data) {
         </div>
         <span class="contact-name">${u.username}</span>
         ${!u.online && u.lastSeen
-          ? `<span class="contact-time">${u.lastSeen}</span>`
-          : ""}
+        ? `<span class="contact-time">${u.lastSeen}</span>`
+        : ""}
       </div>`;
   }
 
@@ -175,7 +190,7 @@ export function createFeedPage(data) {
     list.innerHTML = `<div class="feed-empty"><p>Loading…</p></div>`;
 
     try {
-      const res   = await sendData({}, "/api/getPosts", "GET");
+      const res = await sendData({}, "/api/getPosts", "GET");
       const posts = res?.allpost ?? [];
 
       if (posts.length === 0) {
@@ -188,9 +203,9 @@ export function createFeedPage(data) {
       }
 
       list.innerHTML = posts.map((p, i) => {
-        const idx      = posts.length - 1 - i;
-        const initial  = (p.username || "U")[0].toUpperCase();
-        const liked    = p.likedBy?.includes(user.username);
+        const idx = posts.length - 1 - i;
+        const initial = (p.username || "U")[0].toUpperCase();
+        const liked = p.likedBy?.includes(user.username);
         return `
           <article class="post-card" data-index="${idx}">
             <div class="post-card-header">
@@ -282,7 +297,7 @@ export function createFeedPage(data) {
   function closeModal() {
     overlay.classList.remove("active");
     document.getElementById("modal-title").value = "";
-    document.getElementById("modal-body").value  = "";
+    document.getElementById("modal-body").value = "";
     document.getElementById("modal-char-count").textContent = "0 / 1000";
   }
 
@@ -291,14 +306,14 @@ export function createFeedPage(data) {
   overlay.addEventListener("click", e => { if (e.target === overlay) closeModal(); });
 
   document.getElementById("modal-body").addEventListener("input", () => {
-    const len     = document.getElementById("modal-body").value.length;
+    const len = document.getElementById("modal-body").value.length;
     const counter = document.getElementById("modal-char-count");
     counter.textContent = `${len} / 1000`;
     counter.classList.toggle("warn", len > 900);
   });
 
   document.getElementById("modal-publish").addEventListener("click", async () => {
-    const title   = document.getElementById("modal-title").value.trim();
+    const title = document.getElementById("modal-title").value.trim();
     const content = document.getElementById("modal-body").value.trim();
     if (!title || !content) return;
     try {
@@ -309,9 +324,9 @@ export function createFeedPage(data) {
       console.error("Publish failed:", err);
     }
   });
-  const leftBar         = document.getElementById("left-bar");
-  const sidebarOverlay  = document.getElementById("sidebar-overlay");
-  const hamburgerBtn    = document.getElementById("hamburger-btn");
+  const leftBar = document.getElementById("left-bar");
+  const sidebarOverlay = document.getElementById("sidebar-overlay");
+  const hamburgerBtn = document.getElementById("hamburger-btn");
 
   function toggleContacts() {
     leftBar.classList.toggle("open");
@@ -344,8 +359,8 @@ function escHtml(str = "") {
 function formatTime(ts) {
   if (!ts) return "";
   const diff = Math.floor((Date.now() - ts) / 1000);
-  if (diff < 60)    return "just now";
-  if (diff < 3600)  return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 60) return "just now";
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
   if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
   return new Date(ts).toLocaleDateString();
 }
