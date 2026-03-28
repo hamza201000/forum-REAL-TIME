@@ -19,6 +19,7 @@ func NewUserService(repo *repository.Userepository) *UserService {
 }
 
 func (s *UserService) RegisterUser(user models.User) error {
+	
 	if user.Firstname == "" || user.Lastname == "" || user.Nickname == "" ||
 		user.Age == "" || user.Gender == "" || user.Email == "" || user.Password == "" {
 		return errors.New("missing required fields")

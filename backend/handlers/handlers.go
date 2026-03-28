@@ -120,7 +120,6 @@ func PostsHandler(svc *services.UserService) http.Handler {
 			services.SenData(w, "message", "Posts endpoint is working", http.StatusOK)
 			return
 		}
-
 		var data models.Post
 		err := json.NewDecoder(r.Body).Decode(&data)
 		if err != nil {
@@ -144,18 +143,28 @@ func PostsHandler(svc *services.UserService) http.Handler {
 
 		fmt.Println(data)
 		services.SenData(w, "message", "Post created successfully", http.StatusOK)
-
 	})
 }
 
 func GetPost(svc *services.UserService) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
 		posts, err := svc.Repo.GetAllPost()
 		if err != nil {
 			services.SenData(w, "message", "Intarnal servre", http.StatusInternalServerError)
+			return
 		}
-
 		services.SenData(w, "allpost", posts, http.StatusOK)
+	})
+}
+
+func GetAllUsers(svc *services.UserService) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		session, _:= services.GetSession(r.Context())
+		Users, err := svc.Repo.GetAllUsers(session.UserID)
+		if err != nil {
+			services.SenData(w, "message", "Intarnal servre", http.StatusInternalServerError)
+			return
+		}
+		services.SenData(w, "allusers", Users, http.StatusOK)
 	})
 }

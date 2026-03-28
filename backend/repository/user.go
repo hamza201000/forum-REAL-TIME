@@ -110,6 +110,7 @@ func (r *Userepository) CreatePost(post models.Post) error {
 	}
 	return nil
 }
+
 func (r *Userepository) GetAllPost() ([]models.Post, error) {
 	var posts []models.Post
 	query := "SELECT id , user_id, username, title, content, created_at FROM posts"
@@ -127,8 +128,31 @@ func (r *Userepository) GetAllPost() ([]models.Post, error) {
 		if err != nil {
 			return nil, err
 		}
-		
+
 		posts = append(posts, post)
 	}
 	return posts, nil
+}
+
+func (r *Userepository) GetAllUsers(userid int) ([]models.Client, error) {
+	var Users []models.Client
+	query := "SELECT id ,username FROM users"
+	rows, err := r.Db.Query(query)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var user models.Client
+		err = rows.Scan(&user.User_id, &user.Username)
+		if user.User_id == userid {
+			continue
+		}
+		if err != nil {
+			return nil, err
+		}
+		Users = append(Users, user)
+	}
+	return Users, nil
 }

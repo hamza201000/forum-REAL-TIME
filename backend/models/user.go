@@ -5,25 +5,25 @@ import (
 )
 
 type User struct {
-	Id        int
-	Firstname string `json:"firstname"`
-	Lastname  string `json:"lastname"`
-	Nickname  string `json:"nickname"`
-	Age       string `json:"age"`
-	Gender    string `json:"gender"`
-	Email     string `json:"email"`
-	Password  string `json:"password"`
+	Id        int 
+	Firstname string
+	Lastname  string
+	Nickname  string 
+	Age       string
+	Gender    string
+	Email     string
+	Password  string
 	CreatedAt time.Time
 }
 
 type Session struct {
-	Id        int   `jason:"id"`
-	UserID    int   `jason:"useriD"`
-	Username  string `jason:"username"`
-	Token     string  `jason:"token"`
-	CreatedAt time.Time `jason:"createat"`
-	ExpiresAt time.Time `jason:"expiresat"`
-	MessagePong string `json:"messagePong"`
+	Id          int       `json:"id"`
+	UserID      int       `json:"useriD"`
+	Username    string    `json:"username"`
+	Token       string    `json:"token"`
+	CreatedAt   time.Time `json:"createat"`
+	ExpiresAt   time.Time `json:"expiresat"`
+	MessagePong string    `json:"messagePong"`
 }
 
 type LoginRequest struct {
@@ -34,8 +34,13 @@ type LoginRequest struct {
 type Post struct {
 	ID        int       `json:"id"`
 	UserID    int       `json:"user_id"`
-	Username string   `json:"username"`
+	Username  string    `json:"username"`
 	Title     string    `json:"title"`
 	Content   string    `json:"content"`
 	CreatedAt time.Time `json:"created_at"`
+}
+
+type Client struct {
+	User_id        int `json:"User_id"`
+	Username  string `json:"Username"`
 }

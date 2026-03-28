@@ -1,6 +1,6 @@
+
 import { sendData } from "./api.js";
 import { navigateTo } from "./router.js";
-
 export function createFeedPage(data) {
   const app = document.getElementById("app");
   const user = data || "User";
@@ -121,22 +121,27 @@ export function createFeedPage(data) {
 
   async function renderContacts() {
     try {
-      const ws = new WebSocket("ws://localhost:8080/api/ws")
-      // const res = await sendData({}, "/api/online-users", "GET");
-      // const users = res && res.users ? res.users : [];
+      // const ws = new WebSocket("ws://localhost:8080/api/ws")
+      const res = await sendData({}, "/api/allUsers", "GET");
+      const users = res && res.allusers ? res.allusers : [];
 
-      setInterval(() => {
-        if (ws.readyState === WebSocket.OPEN) {
-          ws.send("ping")
-        }
-      }, 3000)
+      document.getElementById("online-contacts").innerHTML =
+        users.map(contactRow).join("");
 
-      ws.onmessage = (event) => {
-        const msg = JSON.parse(event.data)
-      
-          console.log("server alive", msg);
-        
-      };
+
+
+      // setInterval(() => {
+      //   if (ws.readyState === WebSocket.OPEN) {
+      //     ws.send("ping")
+      //   }
+      // }, 3000)
+
+      // ws.onmessage = (event) => {
+      //   const msg = JSON.parse(event.data)
+
+      //     console.log("server alive", msg);
+
+      // };
 
 
       // const online = users.filter(u => u.online);
@@ -145,8 +150,6 @@ export function createFeedPage(data) {
       // // document.getElementById("online-count").textContent =
       // //   online.length + " online";
 
-      // document.getElementById("online-contacts").innerHTML =
-      //   online.map(contactRow).join("");
 
       // const offlineSection = document.getElementById("offline-section");
       // if (offline.length > 0) {
@@ -164,14 +167,17 @@ export function createFeedPage(data) {
   /* Expected shape per user from /api/online-users:
      { username: "alice", online: true, lastSeen: null | "5m ago" } */
   function contactRow(u) {
-    const initial = (u.username || "?")[0].toUpperCase();
+    console.log(u);
+
+    const initial = (u.Username || "?")[0].toUpperCase();
     return `
-      <div class="contact-item">
+   
+      <div class="contact-item" id=${u.User_id}>
         <div class="contact-avatar-wrap">
           <div class="contact-avatar">${initial}</div>
           <span class="status-dot ${u.online ? "online" : "offline"}"></span>
         </div>
-        <span class="contact-name">${u.username}</span>
+        <span class="contact-name">${u.Username}</span>
         ${!u.online && u.lastSeen
         ? `<span class="contact-time">${u.lastSeen}</span>`
         : ""}
@@ -180,7 +186,7 @@ export function createFeedPage(data) {
 
   /* Poll contacts every 30 seconds */
   renderContacts();
-  const contactsInterval = setInterval(renderContacts, 30_000);
+  // const contactsInterval = setInterval(renderContacts, 30_000);
 
   /* ════════════════════════════════════════
      FEED
@@ -364,3 +370,75 @@ function formatTime(ts) {
   if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
   return new Date(ts).toLocaleDateString();
 }
+
+
+function openChat(user) {
+  const container = document.getElementById("chat-container");
+
+  // prevent opening same chat twice
+  if (document.getElementById("chat-" + user.id)) return;
+
+  const chatBox = document.createElement("div");
+  chatBox.className = "chat-box";
+  chatBox.id = "chat-" + user.id;
+
+  chatBox.innerHTML = `
+    <div class="chat-header">
+      <div class="chat-user">
+        <span>${user.username}</span>
+        <span class="chat-status ${user.online ? "online" : "offline"}"></span>
+      </div>
+      <button onclick="closeChat('${user.id}')">✕</button>
+    </div>
+
+    <div class="chat-body" id="messages-${user.id}">
+      <!-- messages will come from backend -->
+    </div>
+
+    <div class="chat-input">
+      <input type="text" placeholder="Type a message..."
+        onkeydown="sendMessage(event, '${user.id}')">
+    </div>
+  `;
+
+  container.appendChild(chatBox);
+}
+
+
+function closeChat(userId) {
+  const chat = document.getElementById("chat-" + userId);
+  if (chat) chat.remove();
+}
+
+function sendMessage(e, userId) {
+  if (e.key === "Enter") {
+    const input = e.target;
+    const message = input.value.trim();
+    if (!message) return;
+
+    // TEMP: show message in UI
+    const msgBox = document.getElementById("messages-" + userId);
+    const msg = document.createElement("div");
+    msg.textContent = message;
+    msgBox.appendChild(msg);
+
+    input.value = "";
+
+    // TODO: send via WebSocket (Go backend)
+    // socket.send(JSON.stringify({ to: userId, message }));
+  }
+}
+document.body.addEventListener("click", (e) => {
+  const contactItem = e.target.closest(".contact-item");
+
+  if (!contactItem) return;
+
+  const user = {
+    id: contactItem.id,
+    username: contactItem.querySelector(".contact-name").textContent
+  };
+
+  openChat(user);
+});
+
+

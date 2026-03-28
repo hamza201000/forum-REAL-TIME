@@ -886,3 +886,67 @@ textarea:focus,
   .comment-icon-btn,
   .share-btn { padding: 7px 10px; }
 }
+
+
+.chat-box {
+  position: fixed;
+  bottom: 0;
+  right: 20px; /* change to left:20px if you want left side */
+  width: 280px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px 12px 0 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 500;
+  box-shadow: 0 8px 30px rgba(0,0,0,.4);
+  animation: fadeUp .2s ease;
+}
+
+.chat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+}
+
+.chat-user {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chat-status {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.chat-status.online { background: #22c55e; }
+.chat-status.offline { background: var(--muted2); }
+
+.chat-body {
+  height: 200px;
+  padding: 10px;
+  overflow-y: auto;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.chat-input {
+  border-top: 1px solid var(--border);
+  padding: 8px;
+}
+
+.chat-input input {
+  width: 100%;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+}
