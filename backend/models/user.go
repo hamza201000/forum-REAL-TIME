@@ -44,3 +44,9 @@ type Client struct {
 	User_id        int `json:"User_id"`
 	Username  string `json:"Username"`
 }
+
+
+type DataMessage struct {
+	To int 
+	Message string
+}

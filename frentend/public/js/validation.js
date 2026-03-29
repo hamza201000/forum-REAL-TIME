@@ -1,6 +1,6 @@
 export function showError(message, element) {
     const Field = document.querySelector(element);
-    console.log(Field);
+    (Field);
     const p = document.createElement("p");
     p.className = "invalid";
     p.textContent = message;

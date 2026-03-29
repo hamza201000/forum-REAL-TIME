@@ -5,7 +5,7 @@ const publicPages = ['/login', '/register']
 
 export async function router() {
     let path = window.location.pathname
-    console.log(path);
+ 
     const session = await checkSession()
 
     if (!session && !publicPages.includes(path)) {
@@ -32,7 +32,7 @@ async function checkSession() {
         const data = await res.json()
         return data
     } catch (error) {
-        console.log("session check failed:", error);
+      
         return null
     }
 }

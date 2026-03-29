@@ -19,7 +19,7 @@ try{
         const result = await res.json();
         if (res.status === 409) {
 
-            console.log(result.error);
+            (result.error);
             if (result.error.toLowerCase().includes("email")) {
                 showError(result.error, ".Email");
                 return;
@@ -29,43 +29,43 @@ try{
                 return;
             }
         }
-        console.log(res.status);
+        (res.status);
         
         if (res.status === 401) {
-            console.log(result.error);
+            (result.error);
             showError(result.error, ".password");
             return;
         }
         if (res.status === 404) {   
-            console.log(result.error);
+            (result.error);
             showError(result.error, ".user");
             return;
         }
         if (!res.ok) {
-            console.log('internal server');
+            ('internal server');
             return
         }
         if (method==="GET"){
-            console.log(result);
+            (result);
             
             return result
         }
         
         if (route === "/api/register") {
-            console.log('user created successfully');
+            ('user created successfully');
             navigateTo("/login");
         }else if (route === "/api/login") {
-            console.log('user logged in successfully');
+            ('user logged in successfully');
             navigateTo("/");
-            console.log(result);
+            (result);
         }else if (route === "/api/logout") {
-            console.log('user logged out successfully');
+            ('user logged out successfully');
             navigateTo("/login");
         }else if (route="/api/post"){
             navigateTo("/")
         }
     } catch (error) {
-        console.log('error in sending data to backend');
+        ('error in sending data to backend');
         console.error(error)
     }
 }

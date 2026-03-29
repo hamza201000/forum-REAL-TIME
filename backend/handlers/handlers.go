@@ -65,7 +65,6 @@ func LoginHandler(svc *services.UserService) http.HandlerFunc {
 			services.SenData(w, "error", "Invalid request body", http.StatusBadRequest)
 			return
 		}
-
 		userID, username, err := svc.LoginUser(data)
 		if err != nil {
 			if strings.Contains(err.Error(), "user not found") {

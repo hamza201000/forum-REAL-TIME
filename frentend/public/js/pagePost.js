@@ -1,6 +1,10 @@
 
 import { sendData } from "./api.js";
 import { navigateTo } from "./router.js";
+
+let socket = null
+
+
 export function createFeedPage(data) {
   const app = document.getElementById("app");
   const user = data || "User";
@@ -139,7 +143,7 @@ export function createFeedPage(data) {
       // ws.onmessage = (event) => {
       //   const msg = JSON.parse(event.data)
 
-      //     console.log("server alive", msg);
+      //     ("server alive", msg);
 
       // };
 
@@ -167,7 +171,7 @@ export function createFeedPage(data) {
   /* Expected shape per user from /api/online-users:
      { username: "alice", online: true, lastSeen: null | "5m ago" } */
   function contactRow(u) {
-    console.log(u);
+    (u);
 
     const initial = (u.Username || "?")[0].toUpperCase();
     return `
@@ -348,7 +352,6 @@ export function createFeedPage(data) {
   document.getElementById("nav-feed")
     .addEventListener("click", () => navigateTo("/"));
   document.getElementById("logout-btn").addEventListener("click", () => {
-    clearInterval(contactsInterval);
     sendData({}, "/api/logout", "POST");
   });
   renderFeed();
@@ -396,12 +399,10 @@ function openChat(user) {
     </div>
 
     <div class="chat-input" id=${user.id} data-username="${user.username}">
-      <input type="text" placeholder="Type a message..."
-        >
+      <input type="text" placeholder="Type a message...">
     </div>
   `;
-  const socket = new WebSocket("ws://localhost:8080/api/ws");
-
+  connectSocket()
   container.appendChild(chatBox);
 }
 
@@ -412,31 +413,28 @@ function closeChat(userId) {
 }
 
 function sendMessage(input, user) {
-    const message = input.value.trim();
-    if (!message) return;
+  const message = input.value.trim();
+  if (!message) return;
 
-    // TEMP: show message in UI
-    const msgBox = document.getElementById("messages-" + user.id);
-    const msg = document.createElement("div");
-    console.log("messages-" + user.id=="messages-3 ");
-    
-    console.log(msg);
-    console.log(msgBox);
-    msg.textContent =user.username+":"+message;
-    msgBox.appendChild(msg);
+  // TEMP: show message in UI
+  const msgBox = document.getElementById("messages-" + user.id);
+  const msg = document.createElement("div");
 
-    // TODO: send via WebSocket (Go backend)
-    // socket.send(JSON.stringify({ to: userId, message }));
-    
-    socket.send(JSON.stringify({
+  msg.textContent = user.username + ":" + message;
+  msgBox.appendChild(msg);
 
-      to : user.id,
-      message: message
+  // TODO: send via WebSocket (Go backend)
+  // socket.send(JSON.stringify({ to: userId, message }));
 
-    }))
-    
-    input.value = "";
-    
+  socket.send(JSON.stringify({
+    to: user.id,
+    message: message
+  }))
+   socket.onmessage=(event) => {
+    const message = JSON.parse(event.data);
+    console.log(message);
+  };
+  input.value = "";
 }
 
 
@@ -456,7 +454,7 @@ document.body.addEventListener("click", (e) => {
 
 document.body.addEventListener("keydown", (e) => {
   const input = document.body.querySelector(".chat-input")
-  if ((!input) || e.key!="Enter")  return;
+  if ((!input) || e.key != "Enter") return;
   const user = {
     id: input.id,
     username: document.getElementById('nav-username').textContent
@@ -465,3 +463,12 @@ document.body.addEventListener("keydown", (e) => {
 });
 
 
+function connectSocket() {
+  socket = new WebSocket("ws://localhost:8080/api/ws");
+
+  socket.onopen = () => {
+    console.log("Connected");
+  };
+
+
+}

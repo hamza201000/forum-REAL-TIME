@@ -1,4 +1,3 @@
-
 import { sendData } from "./api.js"
 import { checkUser } from "./validation.js"
 import { navigateTo } from "./router.js"
@@ -56,6 +55,8 @@ export function createRegister() {
         const form = document.getElementById("userForm")
         const formData = new FormData(form)
         const data = (Object.fromEntries(formData.entries()))
+       
+        
         if (!checkUser("register", data)) {
             return
         }
