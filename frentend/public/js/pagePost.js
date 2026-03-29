@@ -395,11 +395,12 @@ function openChat(user) {
       <!-- messages will come from backend -->
     </div>
 
-    <div class="chat-input">
+    <div class="chat-input" id=${user.id} data-username="${user.username}">
       <input type="text" placeholder="Type a message..."
-        onkeydown="sendMessage(event, '${user.id}')">
+        >
     </div>
   `;
+  const socket = new WebSocket("ws://localhost:8080/api/ws");
 
   container.appendChild(chatBox);
 }
@@ -410,24 +411,35 @@ function closeChat(userId) {
   if (chat) chat.remove();
 }
 
-function sendMessage(e, userId) {
-  if (e.key === "Enter") {
-    const input = e.target;
+function sendMessage(input, user) {
     const message = input.value.trim();
     if (!message) return;
 
     // TEMP: show message in UI
-    const msgBox = document.getElementById("messages-" + userId);
+    const msgBox = document.getElementById("messages-" + user.id);
     const msg = document.createElement("div");
-    msg.textContent = message;
+    console.log("messages-" + user.id=="messages-3 ");
+    
+    console.log(msg);
+    console.log(msgBox);
+    msg.textContent =user.username+":"+message;
     msgBox.appendChild(msg);
-
-    input.value = "";
 
     // TODO: send via WebSocket (Go backend)
     // socket.send(JSON.stringify({ to: userId, message }));
-  }
+    
+    socket.send(JSON.stringify({
+
+      to : user.id,
+      message: message
+
+    }))
+    
+    input.value = "";
+    
 }
+
+
 document.body.addEventListener("click", (e) => {
   const contactItem = e.target.closest(".contact-item");
 
@@ -439,6 +451,17 @@ document.body.addEventListener("click", (e) => {
   };
 
   openChat(user);
+});
+
+
+document.body.addEventListener("keydown", (e) => {
+  const input = document.body.querySelector(".chat-input")
+  if ((!input) || e.key!="Enter")  return;
+  const user = {
+    id: input.id,
+    username: document.getElementById('nav-username').textContent
+  };
+  sendMessage(e.target, user)
 });
 
 

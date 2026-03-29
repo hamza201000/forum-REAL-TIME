@@ -11,11 +11,16 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+
+var clients = make(map[int]*websocket.Conn) // userID -> connection
 var Upgrade = websocket.Upgrader{}
 
 func WsHandel() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		conn, _ := Upgrade.Upgrade(w, r, nil)
+		ctx := r.Context()
+		session, ok := services.GetSession(ctx)
+		clients[session.UserID]=conn
 		for {
 			_, message, err := conn.ReadMessage()
 			conn.WriteMessage(websocket.TextMessage, message)
@@ -23,8 +28,7 @@ func WsHandel() http.HandlerFunc {
 				return
 			}
 			if string(message) == "ping" {
-				ctx := r.Context()
-				session, ok := services.GetSession(ctx)
+				
 				if !ok {
 					fmt.Println(ok)
 					return
