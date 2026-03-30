@@ -19,7 +19,6 @@ func NewUserService(repo *repository.Userepository) *UserService {
 }
 
 func (s *UserService) RegisterUser(user models.User) error {
-	
 	if user.Firstname == "" || user.Lastname == "" || user.Nickname == "" ||
 		user.Age == "" || user.Gender == "" || user.Email == "" || user.Password == "" {
 		return errors.New("missing required fields")
@@ -27,7 +26,6 @@ func (s *UserService) RegisterUser(user models.User) error {
 	if len(user.Password) < 8 {
 		return errors.New("password must be at least 8 characters long")
 	}
-
 	hashPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return errors.New("failed to hash password")

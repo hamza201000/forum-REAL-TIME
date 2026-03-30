@@ -34,6 +34,6 @@ func RegisterRoutes(DB *sql.DB) http.Handler {
 	// Optionally serve the index.html (or other entry point) for the root path (/)
 	mux.Handle("/", (handlers.HomeHandler()))
 
-	mux.Handle("/api/ws", middleware.AuthMiddleware(handlers.WsHandel(), userService))
+	mux.Handle("/api/ws", middleware.AuthMiddleware(handlers.WsHandel(userService), userService))
 	return mux
 }

@@ -20,7 +20,7 @@ var (
 	}
 )
 
-func WsHandel() http.HandlerFunc {
+func WsHandel(svc *services.UserService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		conn, _ := Upgrade.Upgrade(w, r, nil)
 		ctx := r.Context()
@@ -36,12 +36,16 @@ func WsHandel() http.HandlerFunc {
 			}
 			var m models.DataMessage
 			json.Unmarshal(message, &m)
+			m.Sender_id = session.UserID
+			m.Username_sender = session.Username
+			err = svc.Repo.InsertMessage(m)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
 			targetConn, ok := clients[m.Receiver_id]
-
 			if ok {
 				fmt.Println("done")
-				m.Sender_id = session.UserID
-				m.Username_sender=session.Username
 				dataMessage, err := json.Marshal(m)
 				if err != nil {
 					fmt.Println(err)

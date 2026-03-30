@@ -10,7 +10,6 @@ export async function sendData(data, route, method = "POST") {
             "Content-Type": "application/json"
         }
     };
-
     if (method !== "GET") {
         options.body = JSON.stringify(data);
     }

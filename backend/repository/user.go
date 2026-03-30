@@ -156,3 +156,33 @@ func (r *Userepository) GetAllUsers(userid int) ([]models.Client, error) {
 	}
 	return Users, nil
 }
+
+
+func (r *Userepository) InsertMessage(message models.DataMessage) error {
+	query := "INSERT INTO convertation (sender_id, receiver_id, message) VALUES (?, ?, ?)"
+	_, err := r.Db.Exec(query, message.Sender_id, message.Receiver_id, message.Message)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+
+func (r *Userepository) GetMessages(userID int, targetID int) ([]models.DataMessage, error) {
+	var messages []models.DataMessage
+	query := "SELECT sender_id, receiver_id, message FROM convertation WHERE (sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?) ORDER BY id"
+	rows, err := r.Db.Query(query, userID, targetID, targetID, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var message models.DataMessage
+		err = rows.Scan(&message.Sender_id, &message.Receiver_id, &message.Message)
+		if err != nil {
+			return nil, err
+		}
+		messages = append(messages, message)
+	}
+	return messages, nil
+}
