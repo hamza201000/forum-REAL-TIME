@@ -36,13 +36,20 @@ func WsHandel() http.HandlerFunc {
 			}
 			var m models.DataMessage
 			json.Unmarshal(message, &m)
-			targetConn, ok := clients[m.To]
-			fmt.Println("ok:", ok)
+			targetConn, ok := clients[m.Receiver_id]
+
 			if ok {
-				targetConn.WriteMessage(websocket.TextMessage, message)
+				fmt.Println("done")
+				m.Sender_id = session.UserID
+				m.Username_sender=session.Username
+				dataMessage, err := json.Marshal(m)
+				if err != nil {
+					fmt.Println(err)
+					return
+				}
+				targetConn.WriteMessage(websocket.TextMessage, dataMessage)
 			}
 			// if string(message) == "ping" {
-
 			// 	if !ok {
 			// 		fmt.Println(ok)
 			// 		return

@@ -47,6 +47,8 @@ type Client struct {
 
 
 type DataMessage struct {
-	To int 
-	Message string
+	Username_sender string  
+	Sender_id int 
+	Receiver_id     int    `json:"Receiver_id"`
+	Message string `json:"Message"`
 }

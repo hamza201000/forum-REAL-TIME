@@ -9,7 +9,7 @@ export function createFeedPage(data) {
   const app = document.getElementById("app");
   const user = data || "User";
   const avatar = (user || "U")[0].toUpperCase();
-
+  connectSocket()
   app.innerHTML = `
     <!-- ══ NAVBAR ══ -->
     <nav class="navbar">
@@ -402,8 +402,13 @@ function openChat(user) {
       <input type="text" placeholder="Type a message...">
     </div>
   `;
-  connectSocket()
   container.appendChild(chatBox);
+  socket.onmessage = (event) => {
+    console.log("i get the message");
+    const dataMessage = JSON.parse(event.data);
+    console.log(dataMessage);
+    addMessage(dataMessage)
+  };
 }
 
 
@@ -427,27 +432,22 @@ function sendMessage(input, user) {
   // socket.send(JSON.stringify({ to: userId, message }));
 
   socket.send(JSON.stringify({
-    to: user.id,
-    message: message
+    Receiver_id: Number(user.id),
+    Message: message
   }))
-   socket.onmessage=(event) => {
-    const message = JSON.parse(event.data);
-    console.log(message);
-  };
+  console.log(user.id);
+
   input.value = "";
 }
 
 
 document.body.addEventListener("click", (e) => {
   const contactItem = e.target.closest(".contact-item");
-
   if (!contactItem) return;
-
   const user = {
     id: contactItem.id,
     username: contactItem.querySelector(".contact-name").textContent
   };
-
   openChat(user);
 });
 
@@ -465,10 +465,16 @@ document.body.addEventListener("keydown", (e) => {
 
 function connectSocket() {
   socket = new WebSocket("ws://localhost:8080/api/ws");
-
   socket.onopen = () => {
     console.log("Connected");
   };
+}
 
 
+function addMessage(dataMessage) {
+  const msg = document.createElement("div")
+  const msgBox = document.getElementById("messages-" + dataMessage.Sender_id)
+  msg.textContent = dataMessage.Username_sender + ":" + dataMessage.Message
+  console.log(msgBox);
+  msgBox.appendChild(msg)
 }
