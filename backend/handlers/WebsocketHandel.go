@@ -29,11 +29,35 @@ func WsHandel(svc *services.UserService) http.HandlerFunc {
 			return
 		}
 		clients[session.UserID] = conn
+		// _, message, err := conn.ReadMessage()
+		// if err != nil {
+		// 	return
+		// }
+		// var DataCnv models.DataMessage
+		// json.Unmarshal(message, &DataCnv)
+		// AllMessages, err := svc.Repo.GetMessages(session.UserID, DataCnv.Receiver_id)
+		// if err != nil {
+		// 	fmt.Println(err)
+		// 	return
+		// }
+		// targetConn, ok := clients[session.UserID]
+		// if ok {
+		// 	dataMessage, err := json.Marshal(AllMessages)
+		// 	if err != nil {
+		// 		fmt.Println(err)
+		// 		return
+		// 	}
+		// 	targetConn.WriteMessage(websocket.TextMessage, dataMessage)
+		// }
 		for {
 			_, message, err := conn.ReadMessage()
 			if err != nil {
 				return
 			}
+			// if strings.Contains(string(message),"ping"){
+
+			// 	continue
+			// }
 			var m models.DataMessage
 			json.Unmarshal(message, &m)
 			m.Sender_id = session.UserID
@@ -45,7 +69,6 @@ func WsHandel(svc *services.UserService) http.HandlerFunc {
 			}
 			targetConn, ok := clients[m.Receiver_id]
 			if ok {
-				fmt.Println("done")
 				dataMessage, err := json.Marshal(m)
 				if err != nil {
 					fmt.Println(err)
@@ -55,21 +78,21 @@ func WsHandel(svc *services.UserService) http.HandlerFunc {
 			}
 			// if string(message) == "ping" {
 			// 	if !ok {
-			// 		fmt.Println(ok)
+			// 		ok)
 			// 		return
 			// 	}
 			// 	session.MessagePong = "pong"
 			// 	jsonBytes, err := json.Marshal(session)
 			// 	if err != nil {
-			// 		log.Println("jason marshal err:", err)
+			// 		log.Println("jason marshal err:", fmt.Println(err)
 			// 		return
 			// 	}
 			// 	err = conn.WriteMessage(websocket.TextMessage, jsonBytes)
 			// 	if err != nil {
-			// 		log.Println(err)
+			// 		log.Println(fmt.Println(err)
 			// 		return
 			// 	}
-			// 	fmt.Println("ok daz")
+			// 	"ok daz")
 			// 	continue
 			// }
 		}

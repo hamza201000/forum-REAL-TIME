@@ -76,9 +76,9 @@ func (r *Userepository) ValidateSession(token string) (*models.Session, error) {
 	var session models.Session
 	query := "SELECT user_id, username, token, created_at, expires_at FROM sessions WHERE token = ? LIMIT 1"
 	err := r.Db.QueryRow(query, token).Scan(&session.UserID, &session.Username, &session.Token, &session.CreatedAt, &session.ExpiresAt)
-	fmt.Println(err)
 	if err != nil {
 		if err == sql.ErrNoRows {
+			fmt.Println(err)
 			return nil, errors.New("session not found")
 		}
 		return nil, err
@@ -159,27 +159,28 @@ func (r *Userepository) GetAllUsers(userid int) ([]models.Client, error) {
 
 
 func (r *Userepository) InsertMessage(message models.DataMessage) error {
-	query := "INSERT INTO convertation (sender_id, receiver_id, message) VALUES (?, ?, ?)"
-	_, err := r.Db.Exec(query, message.Sender_id, message.Receiver_id, message.Message)
+	query := "INSERT INTO conversation (sender_id, receiver_id,username_sender, content) VALUES (?,?, ?, ?)"
+	_, err := r.Db.Exec(query, message.Sender_id, message.Receiver_id,message.Username_sender, message.Message)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-
 func (r *Userepository) GetMessages(userID int, targetID int) ([]models.DataMessage, error) {
 	var messages []models.DataMessage
-	query := "SELECT sender_id, receiver_id, message FROM convertation WHERE (sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?) ORDER BY id"
+	query := "SELECT sender_id, receiver_id,username_sender, content FROM conversation WHERE (sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?) ORDER BY id"
 	rows, err := r.Db.Query(query, userID, targetID, targetID, userID)
 	if err != nil {
+		fmt.Println(err)
 		return nil, err
 	}
 	defer rows.Close()
 	for rows.Next() {
 		var message models.DataMessage
-		err = rows.Scan(&message.Sender_id, &message.Receiver_id, &message.Message)
+		err = rows.Scan(&message.Sender_id, &message.Receiver_id,&message.Username_sender, &message.Message)
 		if err != nil {
+			fmt.Println(err)
 			return nil, err
 		}
 		messages = append(messages, message)

@@ -52,3 +52,11 @@ type DataMessage struct {
 	Receiver_id     int    `json:"Receiver_id"`
 	Message string `json:"Message"`
 }
+
+// type DataConversation struct{
+
+	
+
+
+
+// }

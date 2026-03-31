@@ -28,18 +28,17 @@ func RegisterHandler(svc *services.UserService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var data models.User
 		err := json.NewDecoder(r.Body).Decode(&data)
-		fmt.Println(data)
-		fmt.Println(err)
 		if err != nil {
-			fmt.Println("Error")
+
+			fmt.Println(err)
 			return
 		}
 		err = svc.RegisterUser(data)
 		if err != nil {
-			fmt.Println("Error creating user:", err)
+			fmt.Println(err)
 
 			if strings.Contains(err.Error(), "email") {
-				fmt.Println("okook")
+
 				services.SenData(w, "error", "Email already exists", http.StatusConflict) // 409
 				return
 			}
@@ -93,7 +92,6 @@ func LoginHandler(svc *services.UserService) http.HandlerFunc {
 func SessionHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		session, _ := services.GetSession(r.Context())
-		fmt.Println(session.Username, session.UserID)
 		w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(map[string]any{
@@ -133,14 +131,13 @@ func PostsHandler(svc *services.UserService) http.Handler {
 		}
 		data.UserID = session.UserID
 		data.Username = session.Username
-		fmt.Println(data.UserID, data.Username)
+
 		err = svc.Repo.CreatePost(data)
 		if err != nil {
 			services.SenData(w, "message", "Intarnal servre", http.StatusInternalServerError)
 			return
 		}
 
-		fmt.Println(data)
 		services.SenData(w, "message", "Post created successfully", http.StatusOK)
 	})
 }
@@ -158,12 +155,38 @@ func GetPost(svc *services.UserService) http.Handler {
 
 func GetAllUsers(svc *services.UserService) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		session, _:= services.GetSession(r.Context())
+		session, _ := services.GetSession(r.Context())
 		Users, err := svc.Repo.GetAllUsers(session.UserID)
 		if err != nil {
 			services.SenData(w, "message", "Intarnal servre", http.StatusInternalServerError)
 			return
 		}
 		services.SenData(w, "allusers", Users, http.StatusOK)
+	})
+}
+
+func GetMessages(svc *services.UserService) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var User_id int
+
+		err := json.NewDecoder(r.Body).Decode(&User_id)
+		if err != nil {
+			fmt.Println(err)
+			services.SenData(w, "error", "Invalid request body", http.StatusBadRequest)
+			return
+		}
+		fmt.Println(User_id)
+		ctx := r.Context()
+		session, ok := services.GetSession(ctx)
+		if !ok {
+			fmt.Println("session",ok)
+			return
+		}
+		AllMessages, err := svc.Repo.GetMessages(session.UserID, User_id)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		services.SenData(w, "allmessages", AllMessages, http.StatusOK)
 	})
 }

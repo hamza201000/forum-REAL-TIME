@@ -396,6 +396,7 @@ function openChat(user) {
 
     <div class="chat-body" id="messages-${user.id}">
       <!-- messages will come from backend -->
+      
     </div>
 
     <div class="chat-input" id=${user.id} data-username="${user.username}">
@@ -403,11 +404,18 @@ function openChat(user) {
     </div>
   `;
   container.appendChild(chatBox);
+  getMessage(user.id)
+  // socket.send(JSON.stringify({
+  //   Receiver_id: Number(user.id)
+  // }))
   socket.onmessage = (event) => {
     console.log("i get the message");
     const dataMessage = JSON.parse(event.data);
+
     console.log(dataMessage);
-    addMessage(dataMessage)
+    
+      addMessage(dataMessage)
+    
   };
 }
 
@@ -473,8 +481,53 @@ function connectSocket() {
 
 function addMessage(dataMessage) {
   const msg = document.createElement("div")
-  const msgBox = document.getElementById("messages-" + dataMessage.Sender_id)
-  msg.textContent = dataMessage.Username_sender + ":" + dataMessage.Message
+  let msgBox = document.getElementById("messages-" + dataMessage.Receiver_id)
   console.log(msgBox);
+  if (!msgBox) {
+    msgBox = document.getElementById("messages-" + dataMessage.Sender_id)
+  }
+  console.log(msgBox);
+  msg.textContent = dataMessage.Username_sender + ":" + dataMessage.Message
   msgBox.appendChild(msg)
+}
+
+setInterval(() => {
+  if (socket) {
+
+    socket.send(JSON.stringify({
+      Type: "ping"
+    }))
+    console.log("its run ");
+
+  }
+
+}, 10000)
+
+async function getMessage(User_id) {
+  const dataMessage = await sendData(
+    Number(User_id) ,
+    "/api/getMessages",
+    "POST"
+  );
+
+  const container = document.getElementById(`messages-${User_id}`);
+
+  if (!Array.isArray(dataMessage)) {
+    console.error("Not array:", dataMessage);
+    return;
+  }
+
+  container.innerHTML = ""; // clear old messages
+
+  dataMessage.forEach((data) => {
+    addMessageTest(data, container); // 👈 pass container
+  });
+}
+
+function addMessageTest(data, container) {
+  const div = document.createElement("div");
+  div.className = "message";
+  div.textContent = data.message;
+
+  container.appendChild(div);
 }

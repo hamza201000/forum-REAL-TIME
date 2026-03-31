@@ -28,7 +28,7 @@ try{
                 return;
             }
         }
-        (res.status);
+        console.log(res.status);
         
         if (res.status === 401) {
             (result.error);
@@ -40,8 +40,9 @@ try{
             showError(result.error, ".user");
             return;
         }
+        console.log(result);
         if (!res.ok) {
-            ('internal server');
+            console.log('internal server');
             return
         }
         if (method==="GET"){
@@ -53,16 +54,21 @@ try{
         if (route === "/api/register") {
             ('user created successfully');
             navigateTo("/login");
+            return
         }else if (route === "/api/login") {
             ('user logged in successfully');
             navigateTo("/");
-            (result);
+            return
         }else if (route === "/api/logout") {
             ('user logged out successfully');
             navigateTo("/login");
+            return
         }else if (route="/api/post"){
             navigateTo("/")
+            return
         }
+        
+        return result
     } catch (error) {
         ('error in sending data to backend');
         console.error(error)

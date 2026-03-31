@@ -43,7 +43,7 @@ func (s *UserService) LoginUser(data models.LoginRequest) (int, string, error) {
 	}
 	userID,username, err := s.Repo.GetUserId(data)
 	if err != nil {
-		fmt.Println("Error getting user ID:", err)
+		fmt.Println(err)
 		return 0, "", err
 	}
 	return userID,username, nil

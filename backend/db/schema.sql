@@ -51,7 +51,9 @@ CREATE TABLE IF NOT EXISTS likes (
 );
 
 CREATE TABLE IF NOT EXISTS conversation(
+    
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username_sender REFERENCES users(username),
     sender_id REFERENCES users(id),
     receiver_id REFERENCES users(id),
     content TEXT NOT NULL,

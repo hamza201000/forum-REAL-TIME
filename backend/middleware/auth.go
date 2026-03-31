@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"fmt"
 	"net/http"
 
 	"backend/models"
@@ -24,7 +23,7 @@ func AuthMiddleware(next http.Handler, svc *services.UserService) http.Handler {
 			// http.Redirect(w, r, "/login", http.StatusSeeOther)
 			return
 		}
-		fmt.Println(session.UserID,session.Username, session.CreatedAt, "you have a ssesion")
+
 		r = r.WithContext(services.WithSession(r.Context(), session))
 		next.ServeHTTP(w, r)
 	})
