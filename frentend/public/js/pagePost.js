@@ -491,43 +491,44 @@ function addMessage(dataMessage) {
   msgBox.appendChild(msg)
 }
 
-setInterval(() => {
-  if (socket) {
+// setInterval(() => {
+//   if (socket) {
 
-    socket.send(JSON.stringify({
-      Type: "ping"
-    }))
-    console.log("its run ");
+//     socket.send(JSON.stringify({
+//       Type: "ping"
+//     }))
+//     console.log("its run ");
 
-  }
+//   }
 
-}, 10000)
+// }, 10000)
 
 async function getMessage(User_id) {
   const dataMessage = await sendData(
-    Number(User_id) ,
+    Number(User_id) , 
     "/api/getMessages",
     "POST"
   );
 
   const container = document.getElementById(`messages-${User_id}`);
 
-  if (!Array.isArray(dataMessage)) {
+  if (dataMessage&&!Array.isArray(dataMessage.allmessages)) {
     console.error("Not array:", dataMessage);
     return;
   }
 
-  container.innerHTML = ""; // clear old messages
-
-  dataMessage.forEach((data) => {
-    addMessageTest(data, container); // 👈 pass container
+  container.innerHTML = ""; 
+  console.log(container);
+  
+  dataMessage.allmessages.forEach((data) => {
+    addMessageTest(data, container); 
   });
 }
 
 function addMessageTest(data, container) {
   const div = document.createElement("div");
   div.className = "message";
-  div.textContent = data.message;
+  div.textContent = data.Username_sender + ":" + data.Message;
 
   container.appendChild(div);
 }

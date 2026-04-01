@@ -175,13 +175,13 @@ func GetMessages(svc *services.UserService) http.Handler {
 			services.SenData(w, "error", "Invalid request body", http.StatusBadRequest)
 			return
 		}
-		fmt.Println(User_id)
 		ctx := r.Context()
 		session, ok := services.GetSession(ctx)
 		if !ok {
 			fmt.Println("session",ok)
 			return
 		}
+		fmt.Println(User_id)
 		AllMessages, err := svc.Repo.GetMessages(session.UserID, User_id)
 		if err != nil {
 			fmt.Println(err)

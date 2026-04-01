@@ -13,8 +13,9 @@ export async function sendData(data, route, method = "POST") {
     if (method !== "GET") {
         options.body = JSON.stringify(data);
     }
-try{
-    const res = await fetch(route, options);
+    try{
+        console.log(route);
+        const res = await fetch(route, options);
         const result = await res.json();
         if (res.status === 409) {
 
@@ -40,7 +41,10 @@ try{
             showError(result.error, ".user");
             return;
         }
-        console.log(result);
+        if (result.allmessages){
+
+            console.log(result.allmessages[0]);
+        }
         if (!res.ok) {
             console.log('internal server');
             return
@@ -63,7 +67,7 @@ try{
             ('user logged out successfully');
             navigateTo("/login");
             return
-        }else if (route="/api/post"){
+        }else if (route==="/api/post"){
             navigateTo("/")
             return
         }
