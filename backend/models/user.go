@@ -43,14 +43,17 @@ type Post struct {
 type Client struct {
 	User_id        int `json:"User_id"`
 	Username  string `json:"Username"`
+	Is_Online bool  `json:"IsOnline"`
 }
 
 
 type DataMessage struct {
+	Type string `json:"type"`
 	Username_sender string  
 	Sender_id int 
 	Receiver_id     int    `json:"Receiver_id"`
 	Message string `json:"Message"`
+	TabId int `json:"TabId"`
 }
 
 // type DataConversation struct{

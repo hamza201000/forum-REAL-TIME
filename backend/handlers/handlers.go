@@ -146,7 +146,7 @@ func GetPost(svc *services.UserService) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		posts, err := svc.Repo.GetAllPost()
 		if err != nil {
-			services.SenData(w, "message", "Intarnal servre", http.StatusInternalServerError)
+			services.SenData(w, "message", "Intarnal server error", http.StatusInternalServerError)
 			return
 		}
 		services.SenData(w, "allpost", posts, http.StatusOK)
@@ -155,7 +155,11 @@ func GetPost(svc *services.UserService) http.Handler {
 
 func GetAllUsers(svc *services.UserService) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		session, _ := services.GetSession(r.Context())
+		session, ok := services.GetSession(r.Context())
+		if !ok {
+			LogoutHandler(svc)
+			return
+		}
 		Users, err := svc.Repo.GetAllUsers(session.UserID)
 		if err != nil {
 			services.SenData(w, "message", "Intarnal servre", http.StatusInternalServerError)

@@ -888,10 +888,21 @@ textarea:focus,
 }
 
 
-.chat-box {
+
+
+#chat-container {
   position: fixed;
   bottom: 0;
-  right: 20px; /* change to left:20px if you want left side */
+  right: 20px;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  gap: 8px;
+  z-index: 500;
+}
+
+
+.chat-box {
   width: 280px;
   background: var(--surface);
   border: 1px solid var(--border);
@@ -899,11 +910,9 @@ textarea:focus,
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  z-index: 500;
   box-shadow: 0 8px 30px rgba(0,0,0,.4);
   animation: fadeUp .2s ease;
 }
-
 .chat-header {
   display: flex;
   align-items: center;

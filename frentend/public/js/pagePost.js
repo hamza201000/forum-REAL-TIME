@@ -3,13 +3,15 @@ import { sendData } from "./api.js";
 import { navigateTo } from "./router.js";
 
 let socket = null
-
+let tabId = null
+const messageQueue = []
 
 export function createFeedPage(data) {
   const app = document.getElementById("app");
   const user = data || "User";
   const avatar = (user || "U")[0].toUpperCase();
-  connectSocket()
+
+
   app.innerHTML = `
     <!-- ══ NAVBAR ══ -->
     <nav class="navbar">
@@ -122,47 +124,53 @@ export function createFeedPage(data) {
   `;
 
   //CONTACTS — fetch online users from API
+  function updateOnlineCount(users,data) {
+          const onlineIds = data.user_ids || []
+          console.log(onlineIds);
+          
+          users.forEach(u => {
+            if (onlineIds&&onlineIds.includes(u.User_id)) {
+              u.online = true
+            } else {
+              u.online = false
+            }
+          })
+          const onlineUsers = users.filter(u => u.online);
+          document.getElementById("online-contacts").innerHTML = users.map(contactRow).join("")
+          document.getElementById("online-count").textContent = onlineUsers.length + " online"
+}
+
+function safeSend(data) {
+    const msg = JSON.stringify(data)
+    if (socket.readyState === WebSocket.OPEN) {
+        socket.send(msg)
+    } else {
+        messageQueue.push(msg)  // queue it until connection opens
+    }
+}
+
 
   async function renderContacts() {
     try {
       // const ws = new WebSocket("ws://localhost:8080/api/ws")
       const res = await sendData({}, "/api/allUsers", "GET");
       const users = res && res.allusers ? res.allusers : [];
-
-      document.getElementById("online-contacts").innerHTML =
-        users.map(contactRow).join("");
-
-
-
-      // setInterval(() => {
-      //   if (ws.readyState === WebSocket.OPEN) {
-      //     ws.send("ping")
-      //   }
-      // }, 3000)
-
-      // ws.onmessage = (event) => {
-      //   const msg = JSON.parse(event.data)
-
-      //     ("server alive", msg);
-
-      // };
+      // const onlineIds = await sendData({}, "/api/online-users", "GET");
+      // updateOnlineCount(users,{user_ids: onlineIds})
+     safeSend({ type: "online_users" })
+      socket.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        if (data.type === "online_users") { 
+          updateOnlineCount(users,data)
+        }
+      }
+      setInterval(async () => {
+        socket.send(JSON.stringify({ type: "online_users" }))
+      }, 28000)
 
 
-      // const online = users.filter(u => u.online);
-      // const offline = users.filter(u => !u.online);
-
-      // // document.getElementById("online-count").textContent =
-      // //   online.length + " online";
-
-
-      // const offlineSection = document.getElementById("offline-section");
-      // if (offline.length > 0) {
-      //   document.getElementById("offline-contacts").innerHTML =
-      //     offline.map(contactRow).join("");
-      //   offlineSection.style.display = "";
-      // } else {
-      //   offlineSection.style.display = "none";
-      // }
+      // document.getElementById("online-count").textContent =
+      //   onlineUsers.length + " online";
     } catch (err) {
       console.error("Failed to load contacts:", err);
     }
@@ -411,12 +419,13 @@ function openChat(user) {
   socket.onmessage = (event) => {
     console.log("i get the message");
     const dataMessage = JSON.parse(event.data);
-
     console.log(dataMessage);
-    
-      addMessage(dataMessage)
-    
+    addMessage(dataMessage)
   };
+  const chatHeader = chatBox.querySelector(".chat-header");
+  chatHeader.addEventListener("mousedown",  () => {
+      closeChat(user.id);
+    });
 }
 
 
@@ -430,18 +439,19 @@ function sendMessage(input, user) {
   if (!message) return;
 
   // TEMP: show message in UI
-  const msgBox = document.getElementById("messages-" + user.id);
-  const msg = document.createElement("div");
+  // const msgBox = document.getElementById("messages-" + user.id);
+  // const msg = document.createElement("div");
 
-  msg.textContent = user.username + ":" + message;
-  msgBox.appendChild(msg);
+  // msg.textContent = user.username + ":" + message;
+  // msgBox.appendChild(msg);
 
   // TODO: send via WebSocket (Go backend)
   // socket.send(JSON.stringify({ to: userId, message }));
 
   socket.send(JSON.stringify({
     Receiver_id: Number(user.id),
-    Message: message
+    Message: message,
+    TabId: tabId
   }))
   console.log(user.id);
 
@@ -471,11 +481,13 @@ document.body.addEventListener("keydown", (e) => {
 });
 
 
-function connectSocket() {
+export function connectSocket() {
   socket = new WebSocket("ws://localhost:8080/api/ws");
   socket.onopen = () => {
-    console.log("Connected");
-  };
+    // Flush any queued messages
+    messageQueue.forEach(msg => socket.send(msg))
+    messageQueue.length = 0
+}
 }
 
 
@@ -505,23 +517,23 @@ function addMessage(dataMessage) {
 
 async function getMessage(User_id) {
   const dataMessage = await sendData(
-    Number(User_id) , 
+    Number(User_id),
     "/api/getMessages",
     "POST"
   );
 
   const container = document.getElementById(`messages-${User_id}`);
 
-  if (dataMessage&&!Array.isArray(dataMessage.allmessages)) {
+  if (dataMessage && !Array.isArray(dataMessage.allmessages)) {
     console.error("Not array:", dataMessage);
     return;
   }
 
-  container.innerHTML = ""; 
+  container.innerHTML = "";
   console.log(container);
-  
+
   dataMessage.allmessages.forEach((data) => {
-    addMessageTest(data, container); 
+    addMessageTest(data, container);
   });
 }
 
@@ -529,6 +541,6 @@ function addMessageTest(data, container) {
   const div = document.createElement("div");
   div.className = "message";
   div.textContent = data.Username_sender + ":" + data.Message;
-
   container.appendChild(div);
 }
+

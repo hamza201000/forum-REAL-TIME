@@ -187,3 +187,25 @@ func (r *Userepository) GetMessages(userID int, targetID int) ([]models.DataMess
 	}
 	return messages, nil
 }
+
+func (r *Userepository) UpdateUserStatus(userID int, isOnline bool) error {
+	query := "UPDATE users SET is_online = ? WHERE id = ?"
+	_, err := r.Db.Exec(query, isOnline, userID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *Userepository) GetUserStatus(userID int) (bool, error) {
+	var isOnline bool
+	query := "SELECT is_online FROM users WHERE id = ?"
+	err := r.Db.QueryRow(query, userID).Scan(&isOnline)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return false, nil // Default to offline if no status found
+		}
+		return false, err
+	}
+	return isOnline, nil
+}

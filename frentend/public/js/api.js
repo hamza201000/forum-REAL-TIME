@@ -41,10 +41,7 @@ export async function sendData(data, route, method = "POST") {
             showError(result.error, ".user");
             return;
         }
-        if (result.allmessages){
-
-            console.log(result.allmessages[0]);
-        }
+       
         if (!res.ok) {
             console.log('internal server');
             return

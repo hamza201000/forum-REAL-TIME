@@ -1,6 +1,6 @@
 import { createRegister } from "./pageRegister.js";
 import { createLogin } from "./pageLogin.js";
-import { createFeedPage } from "./pagePost.js";
+import { createFeedPage,connectSocket } from "./pagePost.js";
 const publicPages = ['/login', '/register']
 
 export async function router() {
@@ -18,6 +18,7 @@ export async function router() {
     }
     if (path == '/') {
         createFeedPage(session.username)
+        connectSocket()
     } else if (path == '/login') {
         createLogin()
     } else if (path == '/register') {
