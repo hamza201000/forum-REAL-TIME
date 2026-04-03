@@ -30,8 +30,11 @@ func WsHandle(svc *services.UserService) http.HandlerFunc {
 			fmt.Println("Upgrade error:", err)
 			return
 		}
-
 		ctx := r.Context()
+		if err != nil {
+			http.Error(w, "Unauthorized - no cookie", http.StatusUnauthorized)
+			return
+		}
 		session, ok := services.GetSession(ctx)
 		if !ok {
 			conn.Close()
@@ -76,7 +79,7 @@ func WsHandle(svc *services.UserService) http.HandlerFunc {
 			mu.Unlock()
 			if len(clients[session.UserID]) == 0 {
 				delete(clients, session.UserID)
-				broadcastOnlineUsers()
+				// broadcastOnlineUsers()
 			}
 			conn.Close()
 		}()
@@ -86,10 +89,9 @@ func WsHandle(svc *services.UserService) http.HandlerFunc {
 			if err != nil {
 				return
 			}
-
 			var m models.DataMessage
 			json.Unmarshal(message, &m)
-
+			
 			if m.Type == "online_users" {
 				broadcastOnlineUsers()
 				continue
@@ -183,10 +185,8 @@ func broadcastOnlineUsers() {
 		"user_ids": userIds,
 	}
 	data, _ := json.Marshal(msg)
-
 	for _, conns := range connsSnapshot {
 		for _, conn := range conns {
-
 			mu.Lock()
 			conn.WriteMessage(websocket.TextMessage, data)
 			mu.Unlock()

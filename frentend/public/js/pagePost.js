@@ -121,34 +121,64 @@ export function createFeedPage(data) {
         </div>
       </div>
     </div>
+    <div id="chat-container"></div>
   `;
 
   //CONTACTS — fetch online users from API
-  function updateOnlineCount(users,data) {
-          const onlineIds = data.user_ids || []
-          console.log(onlineIds);
-          
-          users.forEach(u => {
-            if (onlineIds&&onlineIds.includes(u.User_id)) {
-              u.online = true
-            } else {
-              u.online = false
-            }
-          })
-          const onlineUsers = users.filter(u => u.online);
-          document.getElementById("online-contacts").innerHTML = users.map(contactRow).join("")
-          document.getElementById("online-count").textContent = onlineUsers.length + " online"
-}
+  function updateOnlineCount(users, data) {
+    const onlineIds = data.user_ids || []
+    console.log(onlineIds);
 
-function safeSend(data) {
+    users.forEach(u => {
+      if (onlineIds && onlineIds.includes(u.User_id)) {
+        u.online = true
+      } else {
+        u.online = false
+      }
+    })
+    const onlineUsers = users.filter(u => u.online);
+    document.getElementById("online-contacts").innerHTML = users.map(contactRow).join("")
+    document.getElementById("online-count").textContent = onlineUsers.length + " online"
+    const userChat = getUserChat()
+    if (!userChat) {
+      console.log("userChat", userChat);
+      return
+    }
+    const online = document.querySelector(".chat-user")
+    if (onlineIds && onlineIds.includes(Number(userChat))) {
+      online.querySelector(".chat-status").className = "chat-status online"
+    } else {
+      online.querySelector(".chat-status").className = "chat-status offline"
+    }
+  }
+  function getUserChat() {
+
+    const chatBox = document.querySelector(".chat-box")
+    console.log("CHATBOX", chatBox);
+
+    if (!chatBox) {
+      return
+    }
+    const userid = chatBox.id.replace(/\D/g, "")
+    return userid
+  }
+
+  function safeSend(data) {
     const msg = JSON.stringify(data)
     if (socket.readyState === WebSocket.OPEN) {
-        socket.send(msg)
+      socket.send(msg)
     } else {
-        messageQueue.push(msg)  // queue it until connection opens
+      messageQueue.push(msg)  // queue it until connection opens
     }
-}
-
+  }
+  function updateOnlineUserChat(isOnln) {
+    const online = document.querySelector("chat-user")
+    if (isOnln) {
+      online.querySelector("chat-status").className = "chat-status online"
+    } else {
+      online.querySelector("chat-status").className = "chat-status offline"
+    }
+  }
 
   async function renderContacts() {
     try {
@@ -157,16 +187,17 @@ function safeSend(data) {
       const users = res && res.allusers ? res.allusers : [];
       // const onlineIds = await sendData({}, "/api/online-users", "GET");
       // updateOnlineCount(users,{user_ids: onlineIds})
-     safeSend({ type: "online_users" })
+      safeSend({ type: "online_users" })
       socket.onmessage = (event) => {
         const data = JSON.parse(event.data);
-        if (data.type === "online_users") { 
-          updateOnlineCount(users,data)
+        if (data.type === "online_users") {
+          console.log(data);
+          updateOnlineCount(users, data)
         }
       }
-      setInterval(async () => {
-        socket.send(JSON.stringify({ type: "online_users" }))
-      }, 28000)
+      // socket.send(JSON.stringify({ type: "online_users" }))
+
+
 
 
       // document.getElementById("online-count").textContent =
@@ -198,7 +229,7 @@ function safeSend(data) {
 
   /* Poll contacts every 30 seconds */
   renderContacts();
-  // const contactsInterval = setInterval(renderContacts, 30_000);
+  const contactsInterval = setInterval(renderContacts, 30_00);
 
   /* ════════════════════════════════════════
      FEED
@@ -419,13 +450,17 @@ function openChat(user) {
   socket.onmessage = (event) => {
     console.log("i get the message");
     const dataMessage = JSON.parse(event.data);
+    if (dataMessage.type === "online_users") {
+      console.log(dataMessage.type);
+      return
+    }
     console.log(dataMessage);
     addMessage(dataMessage)
   };
   const chatHeader = chatBox.querySelector(".chat-header");
-  chatHeader.addEventListener("mousedown",  () => {
-      closeChat(user.id);
-    });
+  chatHeader.addEventListener("mousedown", () => {
+    closeChat(user.id);
+  });
 }
 
 
@@ -448,10 +483,12 @@ function sendMessage(input, user) {
   // TODO: send via WebSocket (Go backend)
   // socket.send(JSON.stringify({ to: userId, message }));
 
+
+
   socket.send(JSON.stringify({
+    Type: "Message",
     Receiver_id: Number(user.id),
-    Message: message,
-    TabId: tabId
+    Message: message
   }))
   console.log(user.id);
 
@@ -464,8 +501,11 @@ document.body.addEventListener("click", (e) => {
   if (!contactItem) return;
   const user = {
     id: contactItem.id,
-    username: contactItem.querySelector(".contact-name").textContent
+    username: contactItem.querySelector(".contact-name").textContent,
+    online: contactItem.querySelector(".online")
   };
+  document.getElementById("chat-container").innerHTML = ""
+
   openChat(user);
 });
 
@@ -487,7 +527,7 @@ export function connectSocket() {
     // Flush any queued messages
     messageQueue.forEach(msg => socket.send(msg))
     messageQueue.length = 0
-}
+  }
 }
 
 

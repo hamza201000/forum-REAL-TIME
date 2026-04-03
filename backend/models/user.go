@@ -50,10 +50,10 @@ type Client struct {
 type DataMessage struct {
 	Type string `json:"type"`
 	Username_sender string  
-	Sender_id int 
+	Sender_id int `json:"Sender_id"`
 	Receiver_id     int    `json:"Receiver_id"`
 	Message string `json:"Message"`
-	TabId int `json:"TabId"`
+	Token string `json:"token"`
 }
 
 // type DataConversation struct{

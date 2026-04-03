@@ -84,7 +84,7 @@ func LoginHandler(svc *services.UserService) http.HandlerFunc {
 			return
 		}
 		middleware.SetSessionCookie(session, w)
-
+		
 		services.SenData(w, "message", "User logged in successfully", http.StatusOK)
 	}
 }
@@ -105,6 +105,9 @@ func SessionHandler() http.Handler {
 func LogoutHandler(svc *services.UserService) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		cookie, _ := r.Cookie("session_token")
+		session, _ := svc.Repo.ValidateSession(cookie.Value)
+		delete(clients, session.UserID)
+		broadcastOnlineUsers()
 		svc.Repo.DeleteSession(cookie.Value)
 		middleware.ClearSessionCookie(w)
 		services.SenData(w, "message", "User logged out successfully", http.StatusOK)
@@ -182,7 +185,7 @@ func GetMessages(svc *services.UserService) http.Handler {
 		ctx := r.Context()
 		session, ok := services.GetSession(ctx)
 		if !ok {
-			fmt.Println("session",ok)
+			fmt.Println("session", ok)
 			return
 		}
 		fmt.Println(User_id)
