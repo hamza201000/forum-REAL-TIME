@@ -14,7 +14,7 @@ export async function sendData(data, route, method = "POST") {
         options.body = JSON.stringify(data);
     }
     try{
-        console.log(route);
+        (route);
         const res = await fetch(route, options);
         const result = await res.json();
         if (res.status === 409) {
@@ -29,7 +29,7 @@ export async function sendData(data, route, method = "POST") {
                 return;
             }
         }
-        console.log(res.status);
+        (res.status);
         
         if (res.status === 401) {
             (result.error);
@@ -43,7 +43,7 @@ export async function sendData(data, route, method = "POST") {
         }
        
         if (!res.ok) {
-            console.log('internal server');
+            ('internal server');
             return
         }
         if (method==="GET"){

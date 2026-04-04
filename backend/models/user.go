@@ -56,6 +56,16 @@ type DataMessage struct {
 	Token string `json:"token"`
 }
 
+// type SenderMessage struct {
+// 	Type string `json:"type"`
+// 	Username_sender string 
+// 	Sender_id int `json:"Sender_id"`
+// 	Receiver_id     int    `json:"Receiver_id"`
+// 	Message string `json:"Message"`
+// }
+
+
+
 // type DataConversation struct{
 
 	

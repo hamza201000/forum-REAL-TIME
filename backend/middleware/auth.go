@@ -23,7 +23,6 @@ func AuthMiddleware(next http.Handler, svc *services.UserService) http.Handler {
 			// http.Redirect(w, r, "/login", http.StatusSeeOther)
 			return
 		}
-
 		r = r.WithContext(services.WithSession(r.Context(), session))
 		next.ServeHTTP(w, r)
 	})

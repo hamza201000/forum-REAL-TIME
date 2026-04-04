@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"sync"
-	"time"
 
 	"backend/models"
 	"backend/services"
@@ -40,14 +39,13 @@ func WsHandle(svc *services.UserService) http.HandlerFunc {
 			conn.Close()
 			return
 		}
-
-		// Configure connection limits and deadlines
-		conn.SetReadLimit(4096)
-		conn.SetReadDeadline(time.Now().Add(60 * time.Second))
-		conn.SetPongHandler(func(string) error {
-			conn.SetReadDeadline(time.Now().Add(60 * time.Second))
-			return nil
-		})
+		// // Configure connection limits and deadlines
+		// conn.SetReadLimit(4096)
+		// conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+		// conn.SetPongHandler(func(string) error {
+		// 	conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+		// 	return nil
+		// })
 
 		// Register connection
 		mu.Lock()
@@ -56,20 +54,21 @@ func WsHandle(svc *services.UserService) http.HandlerFunc {
 		broadcastOnlineUsers()
 
 		// Ping goroutine to keep connection alive
-		go func() {
-			ticker := time.NewTicker(30 * time.Second)
-			defer ticker.Stop()
-			for range ticker.C {
-				mu.Lock()
-				err := conn.WriteMessage(websocket.PingMessage, nil)
-				mu.Unlock()
-				if err != nil {
-					return
-				}
-			}
-		}()
+		// go func() {
+		// 	ticker := time.NewTicker(30 * time.Second)
+		// 	defer ticker.Stop()
+		// 	for range ticker.C {
+		// 		mu.Lock()
+		// 		err := conn.WriteMessage(websocket.PingMessage, nil)
+		// 		mu.Unlock()
+		// 		if err != nil {
+		// 			return
+		// 		}
+		// 	}
+		// }()
 		defer func() {
 			mu.Lock()
+			fmt.Println("defer hhhhh")
 			for i, c := range clients[session.UserID] {
 				if c == conn {
 					clients[session.UserID] = append(clients[session.UserID][:i], clients[session.UserID][i+1:]...)
@@ -79,7 +78,7 @@ func WsHandle(svc *services.UserService) http.HandlerFunc {
 			mu.Unlock()
 			if len(clients[session.UserID]) == 0 {
 				delete(clients, session.UserID)
-				// broadcastOnlineUsers()
+				broadcastOnlineUsers()
 			}
 			conn.Close()
 		}()
@@ -87,11 +86,13 @@ func WsHandle(svc *services.UserService) http.HandlerFunc {
 		for {
 			_, message, err := conn.ReadMessage()
 			if err != nil {
+				fmt.Println("that err", err)
 				return
 			}
 			var m models.DataMessage
+
 			json.Unmarshal(message, &m)
-			
+
 			if m.Type == "online_users" {
 				broadcastOnlineUsers()
 				continue
@@ -110,28 +111,33 @@ func WsHandle(svc *services.UserService) http.HandlerFunc {
 				return
 			}
 
-			dataMessage, err := json.Marshal(m)
+			dataMessageToReceiver, err := json.Marshal(m)
 			if err != nil {
 				fmt.Println(err)
 				return
 			}
-
+			m.Type = "MsgtoSender"
+			dataMessageToSender, err := json.Marshal(m)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
 			// Send to receiver
 			mu.RLock()
 			receiverConns, ok := clients[m.Receiver_id]
 			senderConns, ok2 := clients[session.UserID]
-			mu.RUnlock()
-
 			if ok {
+				fmt.Println(ok, receiverConns, dataMessageToReceiver)
 				for _, target := range receiverConns {
-					target.WriteMessage(websocket.TextMessage, dataMessage)
+					target.WriteMessage(websocket.TextMessage, dataMessageToReceiver)
 				}
 			}
 			if ok2 {
 				for _, target := range senderConns {
-					target.WriteMessage(websocket.TextMessage, dataMessage)
+					target.WriteMessage(websocket.TextMessage, dataMessageToSender)
 				}
 			}
+			mu.RUnlock()
 		}
 	}
 }

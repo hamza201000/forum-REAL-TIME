@@ -1,12 +1,14 @@
 
 import { sendData } from "./api.js";
-import { navigateTo } from "./router.js";
+import { renderContacts } from "./renderContacts.js";
+import { addMessage, openChat } from "./chat.js";
+import { escHtml, formatTime } from "./helpers.js";
+import { connectSocket, socket } from "./helpers.js";
+import { updateOnlineCount } from "./renderContacts.js";
 
-let socket = null
-let tabId = null
-const messageQueue = []
 
-export function createFeedPage(data) {
+export async function createFeedPage(data) {
+  connectSocket()
   const app = document.getElementById("app");
   const user = data || "User";
   const avatar = (user || "U")[0].toUpperCase();
@@ -123,139 +125,114 @@ export function createFeedPage(data) {
     </div>
     <div id="chat-container"></div>
   `;
+  renderFeed();
+  const overlay = document.getElementById("modal-overlay");
+  document.getElementById("fab-btn").addEventListener("click", () => openModal(overlay));
+  document.getElementById("modal-close").addEventListener("click", () => closeModal(overlay));
+  overlay.addEventListener("click", e => { if (e.target === overlay) closeModal(overlay); });
 
-  //CONTACTS — fetch online users from API
-  function updateOnlineCount(users, data) {
-    const onlineIds = data.user_ids || []
-    console.log(onlineIds);
+  document.getElementById("modal-body").addEventListener("input", () => {
+    const len = document.getElementById("modal-body").value.length;
+    const counter = document.getElementById("modal-char-count");
+    counter.textContent = `${len} / 1000`;
+    counter.classList.toggle("warn", len > 900);
+  });
 
-    users.forEach(u => {
-      if (onlineIds && onlineIds.includes(u.User_id)) {
-        u.online = true
-      } else {
-        u.online = false
-      }
-    })
-    const onlineUsers = users.filter(u => u.online);
-    document.getElementById("online-contacts").innerHTML = users.map(contactRow).join("")
-    document.getElementById("online-count").textContent = onlineUsers.length + " online"
-    const userChat = getUserChat()
-    if (!userChat) {
-      console.log("userChat", userChat);
-      return
-    }
-    const online = document.querySelector(".chat-user")
-    if (onlineIds && onlineIds.includes(Number(userChat))) {
-      online.querySelector(".chat-status").className = "chat-status online"
-    } else {
-      online.querySelector(".chat-status").className = "chat-status offline"
-    }
+
+  const leftBar = document.getElementById("left-bar");
+  const sidebarOverlay = document.getElementById("sidebar-overlay");
+  const hamburgerBtn = document.getElementById("hamburger-btn");
+
+  function toggleContacts() {
+    leftBar.classList.toggle("open");
+    sidebarOverlay.classList.toggle("open");
   }
-  function getUserChat() {
+  hamburgerBtn.addEventListener("click", toggleContacts);
+  sidebarOverlay.addEventListener("click", toggleContacts);
 
-    const chatBox = document.querySelector(".chat-box")
-    console.log("CHATBOX", chatBox);
 
-    if (!chatBox) {
-      return
-    }
-    const userid = chatBox.id.replace(/\D/g, "")
-    return userid
-  }
+  document.getElementById("nav-home")
+    .addEventListener("click", () => navigateTo("/"));
 
-  function safeSend(data) {
-    const msg = JSON.stringify(data)
-    if (socket.readyState === WebSocket.OPEN) {
-      socket.send(msg)
-    } else {
-      messageQueue.push(msg)  // queue it until connection opens
-    }
-  }
-  function updateOnlineUserChat(isOnln) {
-    const online = document.querySelector("chat-user")
-    if (isOnln) {
-      online.querySelector("chat-status").className = "chat-status online"
-    } else {
-      online.querySelector("chat-status").className = "chat-status offline"
-    }
-  }
+  document.getElementById("nav-feed")
+    .addEventListener("click", () => navigateTo("/"));
 
-  async function renderContacts() {
+  document.getElementById("modal-publish").addEventListener("click", async () => {
+    const title = document.getElementById("modal-title").value.trim();
+    const content = document.getElementById("modal-body").value.trim();
+    if (!title || !content) return;
     try {
-      // const ws = new WebSocket("ws://localhost:8080/api/ws")
-      const res = await sendData({}, "/api/allUsers", "GET");
-      const users = res && res.allusers ? res.allusers : [];
-      // const onlineIds = await sendData({}, "/api/online-users", "GET");
-      // updateOnlineCount(users,{user_ids: onlineIds})
-      safeSend({ type: "online_users" })
-      socket.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        if (data.type === "online_users") {
-          console.log(data);
-          updateOnlineCount(users, data)
-        }
-      }
-      // socket.send(JSON.stringify({ type: "online_users" }))
-
-
-
-
-      // document.getElementById("online-count").textContent =
-      //   onlineUsers.length + " online";
+      await sendData({ title, content }, "/api/posts", "POST");
+      closeModal(overlay);
+      renderFeed();
     } catch (err) {
-      console.error("Failed to load contacts:", err);
+      console.error("Publish failed:", err);
     }
-  }
+  });
+  document.getElementById("logout-btn").addEventListener("click", () => {
+    sendData({}, "/api/logout", "POST");
+  });
+  const users = await renderContacts();
+  socket.onmessage = (event) => {
+    const dataMessage = JSON.parse(event.data);
+    if (dataMessage.type === "online_users") {
+      updateOnlineCount(users, dataMessage)
+    } else if (dataMessage.type === "MsgtoReceiver"|| dataMessage.type === "MsgtoSender") {
+      console.log("dataMessage", dataMessage);
+      addMessage(dataMessage)
+    }
+  };
+}
 
-  /* Expected shape per user from /api/online-users:
-     { username: "alice", online: true, lastSeen: null | "5m ago" } */
-  function contactRow(u) {
-    (u);
 
-    const initial = (u.Username || "?")[0].toUpperCase();
-    return `
-   
-      <div class="contact-item" id=${u.User_id}>
-        <div class="contact-avatar-wrap">
-          <div class="contact-avatar">${initial}</div>
-          <span class="status-dot ${u.online ? "online" : "offline"}"></span>
-        </div>
-        <span class="contact-name">${u.Username}</span>
-        ${!u.online && u.lastSeen
-        ? `<span class="contact-time">${u.lastSeen}</span>`
-        : ""}
-      </div>`;
-  }
+// function
 
-  /* Poll contacts every 30 seconds */
-  renderContacts();
-  const contactsInterval = setInterval(renderContacts, 30_00);
 
-  /* ════════════════════════════════════════
-     FEED
-  ════════════════════════════════════════ */
-  async function renderFeed() {
-    const list = document.getElementById("feed-list");
-    list.innerHTML = `<div class="feed-empty"><p>Loading…</p></div>`;
 
-    try {
-      const res = await sendData({}, "/api/getPosts", "GET");
-      const posts = res?.allpost ?? [];
+// function updateOnlineUserChat(isOnln) {
+//   const online = document.querySelector("chat-user")
+//   if (isOnln) {
+//     online.querySelector("chat-status").className = "chat-status online"
+//   } else {
+//     online.querySelector("chat-status").className = "chat-status offline"
+//   }
+// }
 
-      if (posts.length === 0) {
-        list.innerHTML = `
+
+
+
+
+/* Poll contacts every 30 seconds */
+
+// const contactsInterval = setInterval(renderContacts, 30_000);
+
+/* ════════════════════════════════════════
+   FEED
+════════════════════════════════════════ */
+async function renderFeed() {
+  const list = document.getElementById("feed-list");
+  (list);
+
+  list.innerHTML = `<div class="feed-empty"><p>Loading…</p></div>`;
+
+  try {
+    const res = await sendData({}, "/api/getPosts", "GET");
+    const posts = res?.allpost ?? [];
+
+    if (posts.length === 0) {
+      list.innerHTML = `
           <div class="feed-empty">
             <p>No posts yet — be the first!</p>
             <small>Click the + button below to create one.</small>
           </div>`;
-        return;
-      }
+      return;
+    }
 
-      list.innerHTML = posts.map((p, i) => {
-        const idx = posts.length - 1 - i;
-        const initial = (p.username || "U")[0].toUpperCase();
-        const liked = p.likedBy?.includes(user.username);
-        return `
+    list.innerHTML = posts.map((p, i) => {
+      const idx = posts.length - 1 - i;
+      const initial = (p.username || "U")[0].toUpperCase();
+      const liked = p.likedBy?.includes(user.username);
+      return `
           <article class="post-card" data-index="${idx}">
             <div class="post-card-header">
               <div class="post-card-header-left">
@@ -309,191 +286,52 @@ export function createFeedPage(data) {
               </button>
             </div>
           </article>`;
-      }).join("");
+    }).join("");
 
-      /* Like button events */
-      list.querySelectorAll(".like-btn").forEach(btn => {
-        btn.addEventListener("click", async () => {
-          const postId = btn.dataset.postid;
-          try {
-            await sendData({ postId }, "/api/like", "POST");
-            renderFeed(); /* re-fetch to get accurate server state */
-          } catch (err) {
-            console.error("Like failed:", err);
-          }
-        });
+    /* Like button events */
+    list.querySelectorAll(".like-btn").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const postId = btn.dataset.postid;
+        try {
+          await sendData({ postId }, "/api/like", "POST");
+          renderFeed(); /* re-fetch to get accurate server state */
+        } catch (err) {
+          console.error("Like failed:", err);
+        }
       });
+    });
 
-    } catch (err) {
-      console.error("Failed to load feed:", err);
-      list.innerHTML = `
+  } catch (err) {
+    console.error("Failed to load feed:", err);
+    list.innerHTML = `
         <div class="feed-empty">
           <p>Could not load posts.</p>
           <small>Check your connection and try again.</small>
         </div>`;
-    }
   }
-
-  /* ════════════════════════════════════════
-     MODAL
-  ════════════════════════════════════════ */
-  const overlay = document.getElementById("modal-overlay");
-
-  function openModal() {
-    overlay.classList.add("active");
-    document.getElementById("modal-title").focus();
-  }
-  function closeModal() {
-    overlay.classList.remove("active");
-    document.getElementById("modal-title").value = "";
-    document.getElementById("modal-body").value = "";
-    document.getElementById("modal-char-count").textContent = "0 / 1000";
-  }
-
-  document.getElementById("fab-btn").addEventListener("click", openModal);
-  document.getElementById("modal-close").addEventListener("click", closeModal);
-  overlay.addEventListener("click", e => { if (e.target === overlay) closeModal(); });
-
-  document.getElementById("modal-body").addEventListener("input", () => {
-    const len = document.getElementById("modal-body").value.length;
-    const counter = document.getElementById("modal-char-count");
-    counter.textContent = `${len} / 1000`;
-    counter.classList.toggle("warn", len > 900);
-  });
-
-  document.getElementById("modal-publish").addEventListener("click", async () => {
-    const title = document.getElementById("modal-title").value.trim();
-    const content = document.getElementById("modal-body").value.trim();
-    if (!title || !content) return;
-    try {
-      await sendData({ title, content }, "/api/posts", "POST");
-      closeModal();
-      renderFeed();
-    } catch (err) {
-      console.error("Publish failed:", err);
-    }
-  });
-  const leftBar = document.getElementById("left-bar");
-  const sidebarOverlay = document.getElementById("sidebar-overlay");
-  const hamburgerBtn = document.getElementById("hamburger-btn");
-
-  function toggleContacts() {
-    leftBar.classList.toggle("open");
-    sidebarOverlay.classList.toggle("open");
-  }
-  hamburgerBtn.addEventListener("click", toggleContacts);
-  sidebarOverlay.addEventListener("click", toggleContacts);
-
-
-  document.getElementById("nav-home")
-    .addEventListener("click", () => navigateTo("/"));
-
-  document.getElementById("nav-feed")
-    .addEventListener("click", () => navigateTo("/"));
-  document.getElementById("logout-btn").addEventListener("click", () => {
-    sendData({}, "/api/logout", "POST");
-  });
-  renderFeed();
-}
-
-/* ── Helpers ── */
-function escHtml(str = "") {
-  return str
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-}
-
-function formatTime(ts) {
-  if (!ts) return "";
-  const diff = Math.floor((Date.now() - ts) / 1000);
-  if (diff < 60) return "just now";
-  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-  return new Date(ts).toLocaleDateString();
 }
 
 
-function openChat(user) {
-  const container = document.getElementById("chat-container");
-
-  // prevent opening same chat twice
-  if (document.getElementById("chat-" + user.id)) return;
-
-  const chatBox = document.createElement("div");
-  chatBox.className = "chat-box";
-  chatBox.id = "chat-" + user.id;
-
-  chatBox.innerHTML = `
-    <div class="chat-header">
-      <div class="chat-user">
-        <span>${user.username}</span>
-        <span class="chat-status ${user.online ? "online" : "offline"}"></span>
-      </div>
-      <button onclick="closeChat('${user.id}')">✕</button>
-    </div>
-
-    <div class="chat-body" id="messages-${user.id}">
-      <!-- messages will come from backend -->
-      
-    </div>
-
-    <div class="chat-input" id=${user.id} data-username="${user.username}">
-      <input type="text" placeholder="Type a message...">
-    </div>
-  `;
-  container.appendChild(chatBox);
-  getMessage(user.id)
-  // socket.send(JSON.stringify({
-  //   Receiver_id: Number(user.id)
-  // }))
-  socket.onmessage = (event) => {
-    console.log("i get the message");
-    const dataMessage = JSON.parse(event.data);
-    if (dataMessage.type === "online_users") {
-      console.log(dataMessage.type);
-      return
-    }
-    console.log(dataMessage);
-    addMessage(dataMessage)
-  };
-  const chatHeader = chatBox.querySelector(".chat-header");
-  chatHeader.addEventListener("mousedown", () => {
-    closeChat(user.id);
-  });
+function openModal(element) {
+  element.classList.add("active");
+  document.getElementById("modal-title").focus();
+}
+function closeModal(element) {
+  element.classList.remove("active");
+  document.getElementById("modal-title").value = "";
+  document.getElementById("modal-body").value = "";
+  document.getElementById("modal-char-count").textContent = "0 / 1000";
 }
 
 
-function closeChat(userId) {
-  const chat = document.getElementById("chat-" + userId);
-  if (chat) chat.remove();
-}
-
-function sendMessage(input, user) {
-  const message = input.value.trim();
-  if (!message) return;
-
-  // TEMP: show message in UI
-  // const msgBox = document.getElementById("messages-" + user.id);
-  // const msg = document.createElement("div");
-
-  // msg.textContent = user.username + ":" + message;
-  // msgBox.appendChild(msg);
-
-  // TODO: send via WebSocket (Go backend)
-  // socket.send(JSON.stringify({ to: userId, message }));
 
 
 
-  socket.send(JSON.stringify({
-    Type: "Message",
-    Receiver_id: Number(user.id),
-    Message: message
-  }))
-  console.log(user.id);
 
-  input.value = "";
-}
+
+
+
+
 
 
 document.body.addEventListener("click", (e) => {
@@ -505,82 +343,21 @@ document.body.addEventListener("click", (e) => {
     online: contactItem.querySelector(".online")
   };
   document.getElementById("chat-container").innerHTML = ""
-
   openChat(user);
+  contactItem.style.backgroundColor = ""
+  const newMsg = contactItem.querySelector(".new-message")
+  if (newMsg) {
+    newMsg.innerHTML = ""
+  }
 });
 
 
-document.body.addEventListener("keydown", (e) => {
-  const input = document.body.querySelector(".chat-input")
-  if ((!input) || e.key != "Enter") return;
-  const user = {
-    id: input.id,
-    username: document.getElementById('nav-username').textContent
-  };
-  sendMessage(e.target, user)
-});
 
 
-export function connectSocket() {
-  socket = new WebSocket("ws://localhost:8080/api/ws");
-  socket.onopen = () => {
-    // Flush any queued messages
-    messageQueue.forEach(msg => socket.send(msg))
-    messageQueue.length = 0
-  }
-}
 
 
-function addMessage(dataMessage) {
-  const msg = document.createElement("div")
-  let msgBox = document.getElementById("messages-" + dataMessage.Receiver_id)
-  console.log(msgBox);
-  if (!msgBox) {
-    msgBox = document.getElementById("messages-" + dataMessage.Sender_id)
-  }
-  console.log(msgBox);
-  msg.textContent = dataMessage.Username_sender + ":" + dataMessage.Message
-  msgBox.appendChild(msg)
-}
 
-// setInterval(() => {
-//   if (socket) {
 
-//     socket.send(JSON.stringify({
-//       Type: "ping"
-//     }))
-//     console.log("its run ");
 
-//   }
 
-// }, 10000)
-
-async function getMessage(User_id) {
-  const dataMessage = await sendData(
-    Number(User_id),
-    "/api/getMessages",
-    "POST"
-  );
-
-  const container = document.getElementById(`messages-${User_id}`);
-
-  if (dataMessage && !Array.isArray(dataMessage.allmessages)) {
-    console.error("Not array:", dataMessage);
-    return;
-  }
-
-  container.innerHTML = "";
-  console.log(container);
-
-  dataMessage.allmessages.forEach((data) => {
-    addMessageTest(data, container);
-  });
-}
-
-function addMessageTest(data, container) {
-  const div = document.createElement("div");
-  div.className = "message";
-  div.textContent = data.Username_sender + ":" + data.Message;
-  container.appendChild(div);
-}
 

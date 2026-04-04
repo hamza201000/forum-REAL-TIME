@@ -400,7 +400,7 @@ textarea:focus,
 }
 
 .contact-item {
-  display: flex;
+  /* display: flex; */
   align-items: center;
   gap: 10px;
   padding: 8px 14px;
@@ -959,3 +959,4 @@ textarea:focus,
   background: var(--bg);
   color: var(--text);
 }
+
