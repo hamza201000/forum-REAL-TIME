@@ -1,4 +1,3 @@
-
 import { sendData } from "./api.js";
 import { getUserChat } from "./chat.js";
 import { safeSend } from "./helpers.js";
@@ -22,7 +21,7 @@ export async function renderContacts() {
 //CONTACTS — fetch online users from API
 export function updateOnlineCount(users, data) {
   const onlineIds = data.user_ids || []
-    (onlineIds);
+  console.log(users);
 
   users.forEach(u => {
     if (onlineIds && onlineIds.includes(u.User_id)) {
@@ -36,7 +35,6 @@ export function updateOnlineCount(users, data) {
   document.getElementById("online-count").textContent = onlineUsers.length + " online"
   const userChat = getUserChat()
   if (!userChat) {
-    ("userChat", userChat);
     return
   }
   const online = document.querySelector(".chat-user")
@@ -49,20 +47,18 @@ export function updateOnlineCount(users, data) {
 /* Expected shape per user from /api/online-users:
     { username: "alice", online: true, lastSeen: null | "5m ago" } */
 function contactRow(u) {
-  (u);
-
   const initial = (u.Username || "?")[0].toUpperCase();
   return `
-     
-        <div class="contact-item" id=${u.User_id}>
+        <div class="contact-item" id=${u.User_id} style=${u.LastMsg && u.LastMsg.Seen === 0 ? "background-color: red;" : ""}>
           <div class="contact-avatar-wrap">
             <div class="contact-avatar">${initial}
              <span class="status-dot ${u.online ? "online" : "offline"}"></span>
              </div>
-            
           </div>
           <span class="contact-name">${u.Username}</span>
-          <div class="new-message"></div>
+          <div class="new-message">
+          <span >${u.LastMsg ? u.LastMsg.Message : ""}</span>
+          </div>
           ${!u.online && u.lastSeen
       ? `<span class="contact-time">${u.lastSeen}</span>`
       : ""}

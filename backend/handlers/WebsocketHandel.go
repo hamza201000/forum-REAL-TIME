@@ -48,9 +48,13 @@ func WsHandle(svc *services.UserService) http.HandlerFunc {
 		// })
 
 		// Register connection
+		fmt.Println(clients)
 		mu.Lock()
+		fmt.Println(clients)
 		clients[session.UserID] = append(clients[session.UserID], conn)
+		fmt.Println(clients)
 		mu.Unlock()
+		fmt.Println(clients)
 		broadcastOnlineUsers()
 
 		// Ping goroutine to keep connection alive
@@ -96,21 +100,26 @@ func WsHandle(svc *services.UserService) http.HandlerFunc {
 			if m.Type == "online_users" {
 				broadcastOnlineUsers()
 				continue
-			}
-
-			if m.Type == "ping" {
+			}else if m.Type == "MsgSeen" {
+				err = svc.Repo.InsertSeenMessage(m.Receiver_id, m.Sender_id)
+				if err != nil {
+					fmt.Println("Error updating seen status:", err)
+				}
 				continue
 			}
+			// if m.Type == "ping" {
+			// 	continue
+			// }
 
 			m.Sender_id = session.UserID
 			m.Username_sender = session.Username
 
-			err = svc.Repo.InsertMessage(m)
+			MessageId, err := svc.Repo.InsertMessage(m)
 			if err != nil {
 				fmt.Println("Error inserting message:", err)
 				return
 			}
-
+			fmt.Println("Message ID:", MessageId)
 			dataMessageToReceiver, err := json.Marshal(m)
 			if err != nil {
 				fmt.Println(err)
@@ -127,7 +136,7 @@ func WsHandle(svc *services.UserService) http.HandlerFunc {
 			receiverConns, ok := clients[m.Receiver_id]
 			senderConns, ok2 := clients[session.UserID]
 			if ok {
-				fmt.Println(ok, receiverConns, dataMessageToReceiver)
+				// fmt.Println(ok, receiverConns, dataMessageToReceiver)
 				for _, target := range receiverConns {
 					target.WriteMessage(websocket.TextMessage, dataMessageToReceiver)
 				}
@@ -185,7 +194,7 @@ func broadcastOnlineUsers() {
 		connsSnapshot[k] = v
 	}
 	mu.RUnlock()
-
+	fmt.Println(connsSnapshot)
 	msg := map[string]interface{}{
 		"type":     "online_users",
 		"user_ids": userIds,

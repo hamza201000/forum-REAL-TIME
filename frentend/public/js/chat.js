@@ -4,10 +4,7 @@ import { sendData } from "./api.js";
 
 
 export function getUserChat() {
-
     const chatBox = document.querySelector(".chat-box")
-
-
     if (!chatBox) {
         return
     }

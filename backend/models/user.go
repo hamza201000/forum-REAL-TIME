@@ -44,15 +44,19 @@ type Client struct {
 	User_id        int `json:"User_id"`
 	Username  string `json:"Username"`
 	Is_Online bool  `json:"IsOnline"`
+	LastMsg *DataMessage `json:"LastMsg"`
 }
 
 
 type DataMessage struct {
+	Id int64 `json:"id"`
 	Type string `json:"type"`
 	Username_sender string  
 	Sender_id int `json:"Sender_id"`
 	Receiver_id     int    `json:"Receiver_id"`
 	Message string `json:"Message"`
+	Seen int `json:"Seen"`
+	CreatedAt time.Time `json:"created_at"`
 	Token string `json:"token"`
 }
 

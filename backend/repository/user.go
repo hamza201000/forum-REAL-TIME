@@ -145,26 +145,44 @@ func (r *Userepository) GetAllUsers(userid int) ([]models.Client, error) {
 	defer rows.Close()
 	for rows.Next() {
 		var user models.Client
+		user.LastMsg = &models.DataMessage{}
 		err = rows.Scan(&user.User_id, &user.Username)
 		if user.User_id == userid {
 			continue
 		}
+		query = "SELECT sender_id, receiver_id,username_sender, content, seen FROM conversation WHERE (sender_id = ? AND receiver_id = ?) ORDER BY id DESC LIMIT 1"
+		err = r.Db.QueryRow(query, userid, user.User_id).Scan(&user.LastMsg.Sender_id, &user.LastMsg.Receiver_id, &user.LastMsg.Username_sender, &user.LastMsg.Message, &user.LastMsg.Seen)
 		if err != nil {
-			return nil, err
+			if err == sql.ErrNoRows {
+				user.LastMsg = nil
+			} else {
+				fmt.Println(err)
+				return nil, err
+			}
 		}
+
 		Users = append(Users, user)
 	}
 	return Users, nil
 }
-
-
-func (r *Userepository) InsertMessage(message models.DataMessage) error {
-	query := "INSERT INTO conversation (sender_id, receiver_id,username_sender, content) VALUES (?,?, ?, ?)"
-	_, err := r.Db.Exec(query, message.Sender_id, message.Receiver_id,message.Username_sender, message.Message)
+func (r *Userepository) InsertSeenMessage(ReciverID, SenderId int) error {
+	query := "UPDATE conversation SET seen = 1 WHERE receiver_id = ? AND sender_id = ?"
+	_, err := r.Db.Exec(query, ReciverID, SenderId)
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+// IF SEEN = 0 MEANS NOT SEEN, IF SEEN = 1 MEANS SEEN, SO I UPDATE IT TO 0 WHEN THE RECEIVER GET THE MESSAGE, AND IN FRONTEND WHEN I GET MESSAGES I CHECK IF SEEN = 0 I RENDER IT AS UNSEEN MESSAGE, IF SEEN = 1 I RENDER IT AS SEEN MESSAGE
+func (r *Userepository) InsertMessage(message models.DataMessage) (int64, error) {
+	query := "INSERT INTO conversation (sender_id, receiver_id,username_sender, content) VALUES (?,?, ?, ?) RETURNING id"
+	var messageID int64
+	err := r.Db.QueryRow(query, message.Sender_id, message.Receiver_id, message.Username_sender, message.Message).Scan(&messageID)
+	if err != nil {
+		return 0, err
+	}
+	return messageID, nil
 }
 
 func (r *Userepository) GetMessages(userID int, targetID int) ([]models.DataMessage, error) {
@@ -178,7 +196,7 @@ func (r *Userepository) GetMessages(userID int, targetID int) ([]models.DataMess
 	defer rows.Close()
 	for rows.Next() {
 		var message models.DataMessage
-		err = rows.Scan(&message.Sender_id, &message.Receiver_id,&message.Username_sender, &message.Message)
+		err = rows.Scan(&message.Sender_id, &message.Receiver_id, &message.Username_sender, &message.Message)
 		if err != nil {
 			fmt.Println(err)
 			return nil, err

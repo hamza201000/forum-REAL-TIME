@@ -14,7 +14,7 @@ export async function sendData(data, route, method = "POST") {
         options.body = JSON.stringify(data);
     }
     try{
-        (route);
+        
         const res = await fetch(route, options);
         const result = await res.json();
         if (res.status === 409) {

@@ -74,7 +74,6 @@ func LoginHandler(svc *services.UserService) http.HandlerFunc {
 				services.SenData(w, "error", "Invalid password", http.StatusUnauthorized)
 				return
 			}
-
 			services.SenData(w, "error", "Failed to login user", http.StatusInternalServerError)
 			return
 		}
@@ -84,7 +83,6 @@ func LoginHandler(svc *services.UserService) http.HandlerFunc {
 			return
 		}
 		middleware.SetSessionCookie(session, w)
-		
 		services.SenData(w, "message", "User logged in successfully", http.StatusOK)
 	}
 }

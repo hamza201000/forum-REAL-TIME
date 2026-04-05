@@ -2,7 +2,7 @@
 import { sendData } from "./api.js";
 import { renderContacts } from "./renderContacts.js";
 import { addMessage, openChat } from "./chat.js";
-import { escHtml, formatTime } from "./helpers.js";
+import { escHtml, formatTime, safeSend } from "./helpers.js";
 import { connectSocket, socket } from "./helpers.js";
 import { updateOnlineCount } from "./renderContacts.js";
 
@@ -180,6 +180,7 @@ export async function createFeedPage(data) {
     } else if (dataMessage.type === "MsgtoReceiver"|| dataMessage.type === "MsgtoSender") {
       console.log("dataMessage", dataMessage);
       addMessage(dataMessage)
+      //  updateOnlineCount(users, dataMessage)
     }
   };
 }
@@ -345,6 +346,9 @@ document.body.addEventListener("click", (e) => {
   document.getElementById("chat-container").innerHTML = ""
   openChat(user);
   contactItem.style.backgroundColor = ""
+
+  safeSend({type: "MsgSeen", Receiver_id: Number(contactItem.id)})
+
   const newMsg = contactItem.querySelector(".new-message")
   if (newMsg) {
     newMsg.innerHTML = ""

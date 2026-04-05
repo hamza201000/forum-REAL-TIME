@@ -57,6 +57,7 @@ CREATE TABLE IF NOT EXISTS conversation(
     sender_id REFERENCES users(id),
     receiver_id REFERENCES users(id),
     content TEXT NOT NULL,
+    seen INTEGER DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
