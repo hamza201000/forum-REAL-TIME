@@ -150,8 +150,8 @@ func (r *Userepository) GetAllUsers(userid int) ([]models.Client, error) {
 		if user.User_id == userid {
 			continue
 		}
-		query = "SELECT sender_id, receiver_id,username_sender, content, seen FROM conversation WHERE (sender_id = ? AND receiver_id = ?) ORDER BY id DESC LIMIT 1"
-		err = r.Db.QueryRow(query, userid, user.User_id).Scan(&user.LastMsg.Sender_id, &user.LastMsg.Receiver_id, &user.LastMsg.Username_sender, &user.LastMsg.Message, &user.LastMsg.Seen)
+		query = "SELECT id, sender_id, receiver_id,username_sender, content, seen FROM conversation WHERE (sender_id = ? AND receiver_id = ? ) OR (sender_id = ? AND receiver_id = ?) ORDER BY id DESC LIMIT 1"
+		err = r.Db.QueryRow(query, userid, user.User_id, user.User_id, userid).Scan(&user.LastMsg.Id, &user.LastMsg.Sender_id, &user.LastMsg.Receiver_id, &user.LastMsg.Username_sender, &user.LastMsg.Message, &user.LastMsg.Seen)
 		if err != nil {
 			if err == sql.ErrNoRows {
 				user.LastMsg = nil
@@ -175,9 +175,9 @@ func (r *Userepository) InsertSeenMessage(ReciverID, SenderId int) error {
 }
 
 // IF SEEN = 0 MEANS NOT SEEN, IF SEEN = 1 MEANS SEEN, SO I UPDATE IT TO 0 WHEN THE RECEIVER GET THE MESSAGE, AND IN FRONTEND WHEN I GET MESSAGES I CHECK IF SEEN = 0 I RENDER IT AS UNSEEN MESSAGE, IF SEEN = 1 I RENDER IT AS SEEN MESSAGE
-func (r *Userepository) InsertMessage(message models.DataMessage) (int64, error) {
+func (r *Userepository) InsertMessage(message models.DataMessage) (int, error) {
 	query := "INSERT INTO conversation (sender_id, receiver_id,username_sender, content) VALUES (?,?, ?, ?) RETURNING id"
-	var messageID int64
+	var messageID int
 	err := r.Db.QueryRow(query, message.Sender_id, message.Receiver_id, message.Username_sender, message.Message).Scan(&messageID)
 	if err != nil {
 		return 0, err

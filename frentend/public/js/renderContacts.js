@@ -21,7 +21,9 @@ export async function renderContacts() {
 //CONTACTS — fetch online users from API
 export function updateOnlineCount(users, data) {
   const onlineIds = data.user_ids || []
+
   console.log(users);
+  console.log(data);
 
   users.forEach(u => {
     if (onlineIds && onlineIds.includes(u.User_id)) {
@@ -30,8 +32,21 @@ export function updateOnlineCount(users, data) {
       u.online = false
     }
   })
-  const onlineUsers = users.filter(u => u.online);
+  users.sort((u1, u2) => {
+    if (u1.LastMsg == null && u2.LastMsg == null) {
+      return 0
+    }
+    if (u1.LastMsg == null) {
+      return 1
+    }
+    if (u2.LastMsg == null) {
+      return -1
+    }
+    return u1.LastMsg.id > u2.LastMsg.id ? -1 : 1; // Online users first
+  });
+
   document.getElementById("online-contacts").innerHTML = users.map(contactRow).join("")
+  const onlineUsers = users.filter(u => u.online);
   document.getElementById("online-count").textContent = onlineUsers.length + " online"
   const userChat = getUserChat()
   if (!userChat) {
@@ -48,14 +63,18 @@ export function updateOnlineCount(users, data) {
     { username: "alice", online: true, lastSeen: null | "5m ago" } */
 function contactRow(u) {
   const initial = (u.Username || "?")[0].toUpperCase();
+  const hasNewMsg = u.LastMsg && u.LastMsg.Seen == 0 && u.LastMsg.Sender_id == u.User_id
+
+  console.log("hasNewMsg", hasNewMsg);
   return `
-        <div class="contact-item" id=${u.User_id} style=${u.LastMsg && u.LastMsg.Seen === 0 ? "background-color: red;" : ""}>
+        <div class="contact-item" id=${u.User_id} style=${hasNewMsg ? "background-color:red" : ""}>
           <div class="contact-avatar-wrap">
             <div class="contact-avatar">${initial}
              <span class="status-dot ${u.online ? "online" : "offline"}"></span>
              </div>
+             <span class="contact-name">${u.Username}</span>
           </div>
-          <span class="contact-name">${u.Username}</span>
+          
           <div class="new-message">
           <span >${u.LastMsg ? u.LastMsg.Message : ""}</span>
           </div>

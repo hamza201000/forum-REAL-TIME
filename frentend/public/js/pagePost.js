@@ -173,14 +173,27 @@ export async function createFeedPage(data) {
     sendData({}, "/api/logout", "POST");
   });
   const users = await renderContacts();
+  safeSend({ type: "online_users" })
   socket.onmessage = (event) => {
-    const dataMessage = JSON.parse(event.data);
-    if (dataMessage.type === "online_users") {
-      updateOnlineCount(users, dataMessage)
-    } else if (dataMessage.type === "MsgtoReceiver"|| dataMessage.type === "MsgtoSender") {
-      console.log("dataMessage", dataMessage);
-      addMessage(dataMessage)
-      //  updateOnlineCount(users, dataMessage)
+    const data = JSON.parse(event.data)
+    if (data.type === "online_users") {
+      updateOnlineCount(users,data)
+    } else if (data.type === "MsgtoReceiver" || data.type === "MsgtoSender") {
+      console.log("data", data);
+      addMessage(data)
+      users.forEach(u => {
+        if (u.User_id === data.Sender_id || u.User_id === data.Receiver_id) {
+          u.LastMsg = {
+            id: data.id,
+            Sender_id: data.Sender_id,
+            Receiver_id: data.Receiver_id,
+            Username_sender: data.Username_sender,
+            Message: data.Message,
+            Seen: data.Seen
+          }
+        }
+      })
+       updateOnlineCount(users, data)
     }
   };
 }
@@ -190,14 +203,14 @@ export async function createFeedPage(data) {
 
 
 
-// function updateOnlineUserChat(isOnln) {
-//   const online = document.querySelector("chat-user")
-//   if (isOnln) {
-//     online.querySelector("chat-status").className = "chat-status online"
-//   } else {
-//     online.querySelector("chat-status").className = "chat-status offline"
-//   }
-// }
+function updateOnlineUserChat(isOnln) {
+  const online = document.querySelector("chat-user")
+  if (isOnln) {
+    online.querySelector("chat-status").className = "chat-status online"
+  } else {
+    online.querySelector("chat-status").className = "chat-status offline"
+  }
+}
 
 
 
@@ -347,12 +360,12 @@ document.body.addEventListener("click", (e) => {
   openChat(user);
   contactItem.style.backgroundColor = ""
 
-  safeSend({type: "MsgSeen", Receiver_id: Number(contactItem.id)})
+  safeSend({ type: "MsgSeen", Sender_id: Number(contactItem.id) })
 
-  const newMsg = contactItem.querySelector(".new-message")
-  if (newMsg) {
-    newMsg.innerHTML = ""
-  }
+  // const newMsg = contactItem.querySelector(".new-message")
+  // if (newMsg) {
+  //   newMsg.innerHTML = ""
+  // }
 });
 
 

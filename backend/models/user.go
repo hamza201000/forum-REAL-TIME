@@ -49,7 +49,7 @@ type Client struct {
 
 
 type DataMessage struct {
-	Id int64 `json:"id"`
+	Id int `json:"id"`
 	Type string `json:"type"`
 	Username_sender string  
 	Sender_id int `json:"Sender_id"`

@@ -54,12 +54,6 @@ func WsHandle(svc *services.UserService) http.HandlerFunc {
 		clients[session.UserID] = append(clients[session.UserID], conn)
 		fmt.Println(clients)
 		mu.Unlock()
-		fmt.Println(clients)
-		broadcastOnlineUsers()
-
-		// Ping goroutine to keep connection alive
-		// go func() {
-		// 	ticker := time.NewTicker(30 * time.Second)
 		// 	defer ticker.Stop()
 		// 	for range ticker.C {
 		// 		mu.Lock()
@@ -86,7 +80,6 @@ func WsHandle(svc *services.UserService) http.HandlerFunc {
 			}
 			conn.Close()
 		}()
-
 		for {
 			_, message, err := conn.ReadMessage()
 			if err != nil {
@@ -100,26 +93,24 @@ func WsHandle(svc *services.UserService) http.HandlerFunc {
 			if m.Type == "online_users" {
 				broadcastOnlineUsers()
 				continue
-			}else if m.Type == "MsgSeen" {
-				err = svc.Repo.InsertSeenMessage(m.Receiver_id, m.Sender_id)
+			} else if m.Type == "MsgSeen" {
+				err = svc.Repo.InsertSeenMessage(session.UserID, m.Sender_id)
 				if err != nil {
 					fmt.Println("Error updating seen status:", err)
 				}
 				continue
+			} else if m.Type == "MsgtoReceiver" || m.Type == "MsgtoSender" {
+				m.Sender_id = session.UserID
+				m.Username_sender = session.Username
+				MessageId, err := svc.Repo.InsertMessage(m)
+				if err != nil {
+					fmt.Println("Error inserting message:", err)
+					return
+				}
+				m.Id = MessageId
+				fmt.Println("Message ID:", MessageId)
 			}
-			// if m.Type == "ping" {
-			// 	continue
-			// }
 
-			m.Sender_id = session.UserID
-			m.Username_sender = session.Username
-
-			MessageId, err := svc.Repo.InsertMessage(m)
-			if err != nil {
-				fmt.Println("Error inserting message:", err)
-				return
-			}
-			fmt.Println("Message ID:", MessageId)
 			dataMessageToReceiver, err := json.Marshal(m)
 			if err != nil {
 				fmt.Println(err)
@@ -196,7 +187,8 @@ func broadcastOnlineUsers() {
 	mu.RUnlock()
 	fmt.Println(connsSnapshot)
 	msg := map[string]interface{}{
-		"type":     "online_users",
+		"type": "online_users",
+
 		"user_ids": userIds,
 	}
 	data, _ := json.Marshal(msg)
