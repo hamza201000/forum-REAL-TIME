@@ -110,7 +110,7 @@ func WsHandle(svc *services.UserService) http.HandlerFunc {
 				m.Id = MessageId
 				fmt.Println("Message ID:", MessageId)
 			}
-
+			
 			dataMessageToReceiver, err := json.Marshal(m)
 			if err != nil {
 				fmt.Println(err)
@@ -138,6 +138,7 @@ func WsHandle(svc *services.UserService) http.HandlerFunc {
 				}
 			}
 			mu.RUnlock()
+			broadcastOnlineUsers()
 		}
 	}
 }
