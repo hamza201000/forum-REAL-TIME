@@ -4,7 +4,7 @@ import { renderContacts } from "./renderContacts.js";
 import { addMessage, openChat } from "./chat.js";
 import { escHtml, formatTime, safeSend } from "./helpers.js";
 import { connectSocket, socket } from "./helpers.js";
-import { updateOnlineCount } from "./renderContacts.js";
+import { updateOnlineCount,updatenewMsg, updateOnlineUsers } from "./renderContacts.js";
 
 
 export async function createFeedPage(data) {
@@ -173,11 +173,14 @@ export async function createFeedPage(data) {
     sendData({}, "/api/logout", "POST");
   });
   const users = await renderContacts();
-  safeSend({ type: "online_users" })
+  updateOnlineCount(users)
+  // safeSend({ type: "online_users" })
   socket.onmessage = (event) => {
     const data = JSON.parse(event.data)
     if (data.type === "online_users") {
-      updateOnlineCount(users,data)
+      console.log(data);
+      const userContacts = document.querySelectorAll(".contact-item")
+      updateOnlineUsers(userContacts, data.user_ids)
     } else if (data.type === "MsgtoReceiver" || data.type === "MsgtoSender") {
       console.log("data", data);
       addMessage(data)
@@ -193,7 +196,8 @@ export async function createFeedPage(data) {
           }
         }
       })
-       updateOnlineCount(users, data)
+      updateOnlineCount(users)
+      updatenewMsg(data)
     }
   };
 }
@@ -203,14 +207,14 @@ export async function createFeedPage(data) {
 
 
 
-function updateOnlineUserChat(isOnln) {
-  const online = document.querySelector("chat-user")
-  if (isOnln) {
-    online.querySelector("chat-status").className = "chat-status online"
-  } else {
-    online.querySelector("chat-status").className = "chat-status offline"
-  }
-}
+// function updateOnlineUserChat(isOnln) {
+//   const online = document.querySelector("chat-user")
+//   if (isOnln) {
+//     online.querySelector("chat-status").className = "chat-status online"
+//   } else {
+//     online.querySelector("chat-status").className = "chat-status offline"
+//   }
+// }
 
 
 
@@ -330,6 +334,7 @@ function openModal(element) {
   element.classList.add("active");
   document.getElementById("modal-title").focus();
 }
+
 function closeModal(element) {
   element.classList.remove("active");
   document.getElementById("modal-title").value = "";

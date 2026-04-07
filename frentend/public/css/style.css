@@ -960,3 +960,40 @@ textarea:focus,
   color: var(--text);
 }
 
+
+.chat-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.chat-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chat-body::-webkit-scrollbar-thumb {
+  background: #3a3a5c;
+  border-radius: 99px;
+}
+
+.chat-body::-webkit-scrollbar-thumb:hover {
+  background: #5a5a8c;
+}
+
+
+/* Messages YOU send → right side */
+.message.me {
+  align-self: flex-end;
+}
+
+/* Messages you RECEIVE → left side */
+.message.them {
+  align-self: flex-start;
+}
+
+.them .bubble { background: #1e1e38; border: 2px solid #3a3a60; border-radius: 14px 14px 14px 4px; }
+.me .bubble   { background: #2a2060; border: 2px solid #5a4fd4; border-radius: 14px 14px 14px 4px; }

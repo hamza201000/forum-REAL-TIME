@@ -19,19 +19,15 @@ export async function renderContacts() {
   }
 }
 //CONTACTS — fetch online users from API
-export function updateOnlineCount(users, data) {
-  const onlineIds = data.user_ids || []
-
-  console.log(users);
-  console.log(data);
-
-  users.forEach(u => {
-    if (onlineIds && onlineIds.includes(u.User_id)) {
-      u.online = true
-    } else {
-      u.online = false
-    }
-  })
+export function updateOnlineCount(users) {
+  // const onlineIds = data.user_ids || []
+  // users.forEach(u => {
+  //   if (onlineIds && onlineIds.includes(u.User_id)) {
+  //     u.online = true
+  //   } else {
+  //     u.online = false
+  //   }
+  // })
   users.sort((u1, u2) => {
     if (u1.LastMsg == null && u2.LastMsg == null) {
       return 0
@@ -44,26 +40,30 @@ export function updateOnlineCount(users, data) {
     }
     return u1.LastMsg.id > u2.LastMsg.id ? -1 : 1; // Online users first
   });
-
-  document.getElementById("online-contacts").innerHTML = users.map(contactRow).join("")
-  const onlineUsers = users.filter(u => u.online);
-  document.getElementById("online-count").textContent = onlineUsers.length + " online"
-  const userChat = getUserChat()
-  if (!userChat) {
-    return
+  const allcontacts = document.getElementById("online-contacts")
+  if (allcontacts) {
+    allcontacts.innerHTML = users.map(contactRow).join("")
   }
-  const online = document.querySelector(".chat-user")
-  if (onlineIds && onlineIds.includes(Number(userChat))) {
-    online.querySelector(".chat-status").className = "chat-status online"
-  } else {
-    online.querySelector(".chat-status").className = "chat-status offline"
-  }
+  
+  // const onlineUsers = users.filter(u => u.online);
+  // document.getElementById("online-count").textContent = onlineUsers.length + " online"
+  // const userChat = getUserChat()
+  // if (!userChat) {
+  //   return
+  // }
+  // const online = document.querySelector(".chat-user")
+  // if (onlineIds && onlineIds.includes(Number(userChat))) {
+  //   online.querySelector(".chat-status").className = "chat-status online"
+  // } else {
+  //   online.querySelector(".chat-status").className = "chat-status offline"
+  // }
 }
 /* Expected shape per user from /api/online-users:
     { username: "alice", online: true, lastSeen: null | "5m ago" } */
 function contactRow(u) {
   const initial = (u.Username || "?")[0].toUpperCase();
-  const hasNewMsg = u.LastMsg && u.LastMsg.Seen == 0 && u.LastMsg.Sender_id == u.User_id
+  const chatBox = document.querySelector(".chat-box")
+  const hasNewMsg = !chatBox && u.LastMsg && u.LastMsg.Seen == 0 && u.LastMsg.Sender_id == u.User_id
 
   console.log("hasNewMsg", hasNewMsg);
   return `
@@ -84,3 +84,69 @@ function contactRow(u) {
         </div>`;
 }
 
+
+export function updateOnlineUsers(userContacts, allUsersIds) {
+  if (allUsersIds && allUsersIds.length !== 0) {
+    document.getElementById("online-count").textContent = allUsersIds.length - 1 + " online"
+  } else {
+    document.getElementById("online-count").textContent = "0 online"
+  }
+  userContacts.forEach(u => {
+    const userId = Number(u.id)
+    if (allUsersIds && allUsersIds.includes(userId)) {
+      u.querySelector(".status-dot").className = "status-dot online"
+    } else {
+      u.querySelector(".status-dot").className = "status-dot offline"
+    }
+  })
+  const userChat = getUserChat()
+  if (!userChat) {
+    return
+  }
+  const online = document.querySelector(".chat-user")
+  if (allUsersIds && allUsersIds.includes(Number(userChat))) {
+    online.querySelector(".chat-status").className = "chat-status online"
+  } else {
+    online.querySelector(".chat-status").className = "chat-status offline"
+  }
+}
+
+
+export function updatenewMsg(dataMessage) {
+  console.log("dataMessage", dataMessage)
+  let contactUser = null
+  if (dataMessage.type == "MsgtoReceiver") {
+    contactUser = document.getElementById("" + dataMessage.Sender_id)
+    const chatBox = document.getElementById("chat-" + dataMessage.Sender_id)
+    if (!chatBox) {
+      contactUser.style.backgroundColor = "red"
+    }
+    console.log(chatBox);
+    const newMsg = contactUser.querySelector(".new-message")
+    newMsg.innerHTML = `<span>${"(new message) " + dataMessage.Message}</span>`
+  } else if (dataMessage.type == "MsgtoSender") {
+    contactUser = document.getElementById("" + dataMessage.Receiver_id)
+    console.log(contactUser);
+    const newMsg = contactUser.querySelector(".new-message")
+    newMsg.innerHTML = `<span>${"you:" + dataMessage.Message}</span>`
+    contactUser.style.backgroundColor = ""
+  }
+}
+
+
+
+// export function updateLastMsg(userId, message) {
+
+//   users.sort((u1, u2) => {
+//     if (u1.LastMsg == null && u2.LastMsg == null) {
+//       return 0
+//     }
+//     if (u1.LastMsg == null) {
+//       return 1
+//     }
+//     if (u2.LastMsg == null) {
+//       return -1
+//     }
+//     return u1.LastMsg.id > u2.LastMsg.id ? -1 : 1; // Online users first
+//   });
+// }

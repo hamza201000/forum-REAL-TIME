@@ -105,7 +105,7 @@ func LogoutHandler(svc *services.UserService) http.Handler {
 		cookie, _ := r.Cookie("session_token")
 		session, _ := svc.Repo.ValidateSession(cookie.Value)
 		delete(clients, session.UserID)
-		broadcastOnlineUsers()
+		broadcastOnlineUsers(session.UserID)
 		svc.Repo.DeleteSession(cookie.Value)
 		middleware.ClearSessionCookie(w)
 		services.SenData(w, "message", "User logged out successfully", http.StatusOK)

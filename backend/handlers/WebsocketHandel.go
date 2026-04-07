@@ -76,7 +76,7 @@ func WsHandle(svc *services.UserService) http.HandlerFunc {
 			mu.Unlock()
 			if len(clients[session.UserID]) == 0 {
 				delete(clients, session.UserID)
-				broadcastOnlineUsers()
+				broadcastOnlineUsers(session.UserID)
 			}
 			conn.Close()
 		}()
@@ -91,7 +91,7 @@ func WsHandle(svc *services.UserService) http.HandlerFunc {
 			json.Unmarshal(message, &m)
 
 			if m.Type == "online_users" {
-				broadcastOnlineUsers()
+				broadcastOnlineUsers(session.UserID)
 				continue
 			} else if m.Type == "MsgSeen" {
 				err = svc.Repo.InsertSeenMessage(session.UserID, m.Sender_id)
@@ -138,7 +138,7 @@ func WsHandle(svc *services.UserService) http.HandlerFunc {
 				}
 			}
 			mu.RUnlock()
-			broadcastOnlineUsers()
+			// broadcastOnlineUsers(session.UserID)
 		}
 	}
 }
@@ -172,14 +172,16 @@ func StatusHandler(svc *services.UserService) http.HandlerFunc {
 	}
 }
 
-func broadcastOnlineUsers() {
+func broadcastOnlineUsers(userSession int) {
 	if len(clients) == 0 {
 		return
 	}
 	mu.RLock()
 	var userIds []int
 	for userId := range clients {
+		
 		userIds = append(userIds, userId)
+		
 	}
 	connsSnapshot := make(map[int][]*websocket.Conn, len(clients))
 	for k, v := range clients {
@@ -189,7 +191,6 @@ func broadcastOnlineUsers() {
 	fmt.Println(connsSnapshot)
 	msg := map[string]interface{}{
 		"type": "online_users",
-
 		"user_ids": userIds,
 	}
 	data, _ := json.Marshal(msg)
