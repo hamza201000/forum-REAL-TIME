@@ -191,7 +191,7 @@ func GetMessages(svc *services.UserService) http.Handler {
 			fmt.Println(err)
 			return
 		}
-		fmt.Println(AllMessages)
+		fmt.Println((AllMessages))
 		services.SenData(w, "allmessages", AllMessages, http.StatusOK)
 	})
 }

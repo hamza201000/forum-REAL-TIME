@@ -185,12 +185,38 @@ func (r *Userepository) InsertMessage(message models.DataMessage) (int, error) {
 	return messageID, nil
 }
 
-func (r *Userepository) GetMessages(lastMsgID int,userID int, targetID int) ([]models.DataMessage, error) {
+func (r *Userepository) GetMessages(lastMsgID int, userID int, targetID int) ([]models.DataMessage, error) {
 	var messages []models.DataMessage
-	query := `SELECT sender_id, receiver_id,username_sender, content FROM conversation
-	 WHERE (sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?) 
-	 AND id > ? ORDER BY id DESC LIMIT 10`
-	rows, err := r.Db.Query(query, userID, targetID, targetID, userID, lastMsgID)
+
+	var rows *sql.Rows
+	var err error
+	fmt.Println("lastMsgID", lastMsgID)
+	if lastMsgID == 0 {
+		// first load — get the latest 10 messages
+		// fmt.Println(lastMsgID)
+		rows, err = r.Db.Query(`
+        SELECT id, sender_id, receiver_id,username_sender, content FROM conversation
+        WHERE (sender_id = ? AND receiver_id = ?
+           OR sender_id = ? AND receiver_id = ?)
+        ORDER BY id DESC
+        LIMIT 10
+    `, userID, targetID, targetID, userID, lastMsgID)
+	} else {
+		// pagination — get 10 messages older than lastMsgID
+		rows, err = r.Db.Query(`
+        SELECT id, sender_id, receiver_id,username_sender, content FROM conversation
+        WHERE (sender_id = ? AND receiver_id = ?
+           OR sender_id = ? AND receiver_id = ?)
+        AND id < ?
+        ORDER BY id DESC
+        LIMIT 10
+    `, userID, targetID, targetID, userID, lastMsgID)
+	}
+
+	// query := `SELECT sender_id, receiver_id,username_sender, content FROM conversation
+	//  WHERE (sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?)
+	//  AND id > ? ORDER BY id DESC LIMIT 10`
+	// rows, err := r.Db.Query(query, userID, targetID, targetID, userID, lastMsgID)
 	if err != nil {
 		fmt.Println(err)
 		return nil, err
@@ -198,7 +224,7 @@ func (r *Userepository) GetMessages(lastMsgID int,userID int, targetID int) ([]m
 	defer rows.Close()
 	for rows.Next() {
 		var message models.DataMessage
-		err = rows.Scan(&message.Sender_id, &message.Receiver_id, &message.Username_sender, &message.Message)
+		err = rows.Scan(&message.Id, &message.Sender_id, &message.Receiver_id, &message.Username_sender, &message.Message)
 		if err != nil {
 			fmt.Println(err)
 			return nil, err

@@ -61,9 +61,8 @@ type DataMessage struct {
 
 type Loadmsg struct {
 	Type    string `json:"type"`
-	LastMsg int    `json:"lastMsg"`
+	LastMsg int    `json:"lastMsgID"`
 	UserID  int    `json:"userID"`
-
 }
 
 // type SenderMessage struct {

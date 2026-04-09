@@ -65,10 +65,12 @@ export function openChat(user) {
 
     const chatContainer = document.getElementById(`messages-${user.id}`);
     chatContainer.innerHTML = "";
+
+    console.log("isloading", isLoading, lastMsgID);
+    isLoading = false;
+    lastMsgID = 0;
     chatContainer.addEventListener(
         "scroll",
-
-
         debounce(async () => {
             console.log("ok", lastMsgID);
             if (chatContainer.scrollTop === 0) {
@@ -97,14 +99,13 @@ export async function getMessage(User_id) {
     );
     if (dataMessage && !Array.isArray(dataMessage.allmessages)) {
         console.error("Not array:", dataMessage);
-        isLoading = false;
         return;
     }
     const container = document.getElementById(`messages-${User_id}`);
-    dataMessage.allmessages.reverse(); // Show older messages at the top
-    dataMessage.allmessages.forEach((data) => {
-        addMessageTest(data, container);
-    });
+    // dataMessage.allmessages.reverse(); // Show older messages at the top
+    // dataMessage.allmessages.forEach((data) => {
+    //     addMessageTest(data, container);
+    // });
     // const isAtBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 50;
     // if (isAtBottom) {
     //     container.scrollTop = container.scrollHeight;
@@ -119,22 +120,22 @@ export async function getMessage(User_id) {
     } else {
         container.scrollTop = container.scrollHeight - oldHeight; // restore position
     }
-    lastMsgID += 10;
+
+    lastMsgID = dataMessage.allmessages[dataMessage.allmessages.length - 1] ? dataMessage.allmessages[dataMessage.allmessages.length - 1].id : lastMsgID; // update lastMsgID to oldest loaded message
     isLoading = false;
 }
+
+
+
 export function debounce(func, delay) {
     let timeout;
-
     return function (...args) {
         clearTimeout(timeout);
-
         timeout = setTimeout(() => {
             func.apply(this, args);
         }, delay);
     };
 }
-
-
 
 async function loadMessages(user_id) {
     if (isLoading) return;
@@ -153,7 +154,11 @@ async function loadMessages(user_id) {
 
 export function closeChat(userId) {
     const chat = document.getElementById("chat-" + userId);
-    if (chat) chat.remove();
+    if (chat) {
+        chat.remove();
+        isLoading = false;
+        lastMsgID = 0;
+    }
 }
 
 export function sendMessage(input, user) {
