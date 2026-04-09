@@ -4,7 +4,7 @@ import { renderContacts } from "./renderContacts.js";
 import { addMessage, openChat } from "./chat.js";
 import { escHtml, formatTime, safeSend } from "./helpers.js";
 import { connectSocket, socket } from "./helpers.js";
-import { updateOnlineCount,updatenewMsg, updateOnlineUsers } from "./renderContacts.js";
+import { updateOnlineCount, updatenewMsg, updateOnlineUsers, renderCount } from "./renderContacts.js";
 
 
 export async function createFeedPage(data) {
@@ -173,7 +173,7 @@ export async function createFeedPage(data) {
     sendData({}, "/api/logout", "POST");
   });
   const users = await renderContacts();
-  updateOnlineCount(users)
+  renderCount(users)
   // safeSend({ type: "online_users" })
   socket.onmessage = (event) => {
     const data = JSON.parse(event.data)
@@ -185,6 +185,7 @@ export async function createFeedPage(data) {
       console.log("data", data);
       addMessage(data)
       users.forEach(u => {
+        // Update last message for relevant users
         if (u.User_id === data.Sender_id || u.User_id === data.Receiver_id) {
           u.LastMsg = {
             id: data.id,
@@ -196,10 +197,19 @@ export async function createFeedPage(data) {
           }
         }
       })
+      if (data.type === "MsgtoReceiver") {
+        const contactUser = document.getElementById("chat-" + data.Sender_id)
+        if (contactUser) {
+          socket.send(JSON.stringify({
+            Type: "MsgSeen",
+            Sender_id: Number(data.Sender_id)
+          }))
+        }
+      }
       updateOnlineCount(users)
       updatenewMsg(data)
-    }
-  };
+    };
+  }
 }
 
 
@@ -361,12 +371,14 @@ document.body.addEventListener("click", (e) => {
     username: contactItem.querySelector(".contact-name").textContent,
     online: contactItem.querySelector(".online")
   };
+  if (document.getElementById("chat-" + user.id)) return;
   document.getElementById("chat-container").innerHTML = ""
   openChat(user);
   contactItem.style.backgroundColor = ""
-
-  safeSend({ type: "MsgSeen", Sender_id: Number(contactItem.id) })
-
+  safeSend({
+    Type: "MsgSeen",
+    Sender_id: Number(user.id)
+  })
   // const newMsg = contactItem.querySelector(".new-message")
   // if (newMsg) {
   //   newMsg.innerHTML = ""

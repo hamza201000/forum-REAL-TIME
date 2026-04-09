@@ -1,5 +1,9 @@
-import { socket } from "./helpers.js";
+import { socket, safeSend } from "./helpers.js";
 import { sendData } from "./api.js";
+
+
+let isLoading = false;
+let lastMsgID = 0;
 
 export function getUserChat() {
     const chatBox = document.querySelector(".chat-box")
@@ -14,7 +18,7 @@ export function openChat(user) {
     const container = document.getElementById("chat-container");
 
     // prevent opening same chat twice
-    if (document.getElementById("chat-" + user.id)) return;
+    // if (document.getElementById("chat-" + user.id)) return;
 
     const chatBox = document.createElement("div");
     chatBox.className = "chat-box";
@@ -33,15 +37,18 @@ export function openChat(user) {
       
     </div>
 
-    <div class="chat-input" id=${user.id} data-username="${user.username}">
+    <div class="chat-input" id="${user.id}" data-username="${user.username}">
       <input type="text" placeholder="Type a message...">
     </div>
   `;
     container.appendChild(chatBox);
-    getMessage(user.id)
+    // getMessage(user.id)
     // socket.send(JSON.stringify({
     //   Receiver_id: Number(user.id)
     // }))
+
+    getMessage(user.id)
+
     const input = chatBox.querySelector(".chat-input")
     input.addEventListener("keydown", (e) => {
         if (e.key != "Enter") return;
@@ -55,8 +62,94 @@ export function openChat(user) {
     chatHeader.addEventListener("mousedown", () => {
         closeChat(user.id);
     })
+
+    const chatContainer = document.getElementById(`messages-${user.id}`);
+    chatContainer.innerHTML = "";
+    chatContainer.addEventListener(
+        "scroll",
+
+
+        debounce(async () => {
+            console.log("ok", lastMsgID);
+            if (chatContainer.scrollTop === 0) {
+                await getMessage(user.id);
+            }
+        }, 200) // wait 200ms after user stops scrolling
+    );
 }
 
+
+export async function getMessage(User_id) {
+
+    if (isLoading) return;
+
+    isLoading = true;
+
+
+
+    const dataMessage = await sendData(
+        {
+            lastMsgID: lastMsgID,
+            userID: Number(User_id)
+        },
+        "/api/getMessages",
+        "POST"
+    );
+    if (dataMessage && !Array.isArray(dataMessage.allmessages)) {
+        console.error("Not array:", dataMessage);
+        isLoading = false;
+        return;
+    }
+    const container = document.getElementById(`messages-${User_id}`);
+    dataMessage.allmessages.reverse(); // Show older messages at the top
+    dataMessage.allmessages.forEach((data) => {
+        addMessageTest(data, container);
+    });
+    // const isAtBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 50;
+    // if (isAtBottom) {
+    //     container.scrollTop = container.scrollHeight;
+    // }
+    const oldHeight = container.scrollHeight;
+    dataMessage.allmessages.forEach((data) => {
+        const div = buildMessageEl(data, container);
+        container.prepend(div); // prepend, don't append
+    });
+    if (lastMsgID == 0) {
+        container.scrollTop = container.scrollHeight; // scroll to bottom on first load
+    } else {
+        container.scrollTop = container.scrollHeight - oldHeight; // restore position
+    }
+    lastMsgID += 10;
+    isLoading = false;
+}
+export function debounce(func, delay) {
+    let timeout;
+
+    return function (...args) {
+        clearTimeout(timeout);
+
+        timeout = setTimeout(() => {
+            func.apply(this, args);
+        }, delay);
+    };
+}
+
+
+
+async function loadMessages(user_id) {
+    if (isLoading) return;
+
+    isLoading = true;
+
+    // fetch data here
+    await sendData(
+        Number(user_id),
+        "/api/getMessages",
+        "POST"
+    );;
+
+    isLoading = false;
+}
 
 export function closeChat(userId) {
     const chat = document.getElementById("chat-" + userId);
@@ -127,27 +220,7 @@ export function addMessage(dataMessage) {
     }
 }
 
-export async function getMessage(User_id) {
-    const dataMessage = await sendData(
-        Number(User_id),
-        "/api/getMessages",
-        "POST"
-    );
-    const container = document.getElementById(`messages-${User_id}`);
-    if (dataMessage && !Array.isArray(dataMessage.allmessages)) {
-        console.error("Not array:", dataMessage);
-        return;
-    }
-    container.innerHTML = "";
-    dataMessage.allmessages.forEach((data) => {
-        addMessageTest(data, container);
-    });
-    // const isAtBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 50;
-    // if (isAtBottom) {
-    //     container.scrollTop = container.scrollHeight;
-    // }
-    container.scrollTop = container.scrollHeight;
-}
+
 
 export function addMessageTest(data, container, myMessage) {
     // console.log(container.id.replace(/\D/g, ""));
@@ -156,9 +229,15 @@ export function addMessageTest(data, container, myMessage) {
     const div = document.createElement("div");
     div.className = `message ${myMessage ? 'me' : 'them'}`;
     // div.textContent = data.Username_sender + ":" + data.Message;
-      div.innerHTML = `<div class="bubble">${data.Message}</div>`;
+    div.innerHTML = `<div class="bubble">${data.Message}</div>`;
 
-    
+
     container.appendChild(div);
 }
-
+export function buildMessageEl(data, container) {
+    const myMessage = data.Receiver_id === Number(container.id.replace(/\D/g, ""));
+    const div = document.createElement("div");
+    div.className = `message ${myMessage ? 'me' : 'them'}`;
+    div.innerHTML = `<div class="bubble">${data.Message}</div>`;
+    return div;
+}

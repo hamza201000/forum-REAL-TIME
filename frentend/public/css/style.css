@@ -994,6 +994,5 @@ textarea:focus,
 .message.them {
   align-self: flex-start;
 }
-
 .them .bubble { background: #1e1e38; border: 2px solid #3a3a60; border-radius: 14px 14px 14px 4px; }
 .me .bubble   { background: #2a2060; border: 2px solid #5a4fd4; border-radius: 14px 14px 14px 4px; }

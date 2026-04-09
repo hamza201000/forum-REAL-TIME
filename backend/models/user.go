@@ -5,10 +5,10 @@ import (
 )
 
 type User struct {
-	Id        int 
+	Id        int
 	Firstname string
 	Lastname  string
-	Nickname  string 
+	Nickname  string
 	Age       string
 	Gender    string
 	Email     string
@@ -41,39 +41,39 @@ type Post struct {
 }
 
 type Client struct {
-	User_id        int `json:"User_id"`
-	Username  string `json:"Username"`
-	Is_Online bool  `json:"IsOnline"`
-	LastMsg *DataMessage `json:"LastMsg"`
+	User_id   int          `json:"User_id"`
+	Username  string       `json:"Username"`
+	Is_Online bool         `json:"IsOnline"`
+	LastMsg   *DataMessage `json:"LastMsg"`
 }
 
-
 type DataMessage struct {
-	Id int `json:"id"`
-	Type string `json:"type"`
-	Username_sender string  
-	Sender_id int `json:"Sender_id"`
-	Receiver_id     int    `json:"Receiver_id"`
-	Message string `json:"Message"`
-	Seen int `json:"Seen"`
-	CreatedAt time.Time `json:"created_at"`
-	Token string `json:"token"`
+	Id              int    `json:"id"`
+	Type            string `json:"type"`
+	Username_sender string
+	Sender_id       int       `json:"Sender_id"`
+	Receiver_id     int       `json:"Receiver_id"`
+	Message         string    `json:"Message"`
+	Seen            int       `json:"Seen"`
+	CreatedAt       time.Time `json:"created_at"`
+	Token           string    `json:"token"`
+}
+
+type Loadmsg struct {
+	Type    string `json:"type"`
+	LastMsg int    `json:"lastMsg"`
+	UserID  int    `json:"userID"`
+
 }
 
 // type SenderMessage struct {
 // 	Type string `json:"type"`
-// 	Username_sender string 
+// 	Username_sender string
 // 	Sender_id int `json:"Sender_id"`
 // 	Receiver_id     int    `json:"Receiver_id"`
 // 	Message string `json:"Message"`
 // }
 
-
-
 // type DataConversation struct{
-
-	
-
-
 
 // }

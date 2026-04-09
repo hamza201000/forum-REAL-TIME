@@ -185,10 +185,12 @@ func (r *Userepository) InsertMessage(message models.DataMessage) (int, error) {
 	return messageID, nil
 }
 
-func (r *Userepository) GetMessages(userID int, targetID int) ([]models.DataMessage, error) {
+func (r *Userepository) GetMessages(lastMsgID int,userID int, targetID int) ([]models.DataMessage, error) {
 	var messages []models.DataMessage
-	query := "SELECT sender_id, receiver_id,username_sender, content FROM conversation WHERE (sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?) ORDER BY id"
-	rows, err := r.Db.Query(query, userID, targetID, targetID, userID)
+	query := `SELECT sender_id, receiver_id,username_sender, content FROM conversation
+	 WHERE (sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?) 
+	 AND id > ? ORDER BY id DESC LIMIT 10`
+	rows, err := r.Db.Query(query, userID, targetID, targetID, userID, lastMsgID)
 	if err != nil {
 		fmt.Println(err)
 		return nil, err

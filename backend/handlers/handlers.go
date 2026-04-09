@@ -172,9 +172,9 @@ func GetAllUsers(svc *services.UserService) http.Handler {
 
 func GetMessages(svc *services.UserService) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		var User_id int
+		var msg models.Loadmsg
 
-		err := json.NewDecoder(r.Body).Decode(&User_id)
+		err := json.NewDecoder(r.Body).Decode(&msg)
 		if err != nil {
 			fmt.Println(err)
 			services.SenData(w, "error", "Invalid request body", http.StatusBadRequest)
@@ -186,12 +186,12 @@ func GetMessages(svc *services.UserService) http.Handler {
 			fmt.Println("session", ok)
 			return
 		}
-		fmt.Println(User_id)
-		AllMessages, err := svc.Repo.GetMessages(session.UserID, User_id)
+		AllMessages, err := svc.Repo.GetMessages(msg.LastMsg, session.UserID, msg.UserID)
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
+		fmt.Println(AllMessages)
 		services.SenData(w, "allmessages", AllMessages, http.StatusOK)
 	})
 }
