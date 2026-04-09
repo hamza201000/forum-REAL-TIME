@@ -10,7 +10,10 @@ import (
 )
 
 func main() {
-	DB := db.InitDB()
+	DB, err := db.InitDB()
+	if err != nil {
+		log.Fatal("error initializing database : ", err)
+	}
 	defer DB.Close()
 	handler := routes.RegisterRoutes(DB)
 
