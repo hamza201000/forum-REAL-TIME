@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
@@ -12,6 +13,8 @@ func main() {
 	DB := db.InitDB()
 	defer DB.Close()
 	handler := routes.RegisterRoutes(DB)
+
+	fmt.Println("Server is running on port http://localhost:8080")
 	if err := http.ListenAndServe(":8080", handler); err != nil {
 		log.Fatal("error starting server : %v", err)
 	}
