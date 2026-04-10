@@ -1,6 +1,5 @@
 export function showError(message, element) {
     const Field = document.querySelector(element);
-    (Field);
     const p = document.createElement("p");
     p.className = "invalid";
     p.textContent = message;
@@ -77,13 +76,5 @@ export function checkUser(type, user) {
         }
     }
     return true;
-}
-
-export function toLowerObject(obj) {
-    const newObj = {};
-    for (const key in obj) {
-        newObj[key.toLowerCase()] = obj[key].toLowerCase();
-    }
-    return newObj;
 }
 

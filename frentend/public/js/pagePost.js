@@ -60,35 +60,8 @@ export async function createFeedPage(data) {
         <div class="feed-inner" id="feed-list"></div>
       </main>
 
-      <!-- RIGHT: Navigation -->
-      <aside class="right-bar" id="right-bar">
-        <div class="sidebar-label">Navigation</div>
-
-        <div class="sidebar-item active" id="nav-feed">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-            <polyline points="9 22 9 12 15 12 15 22"/>
-          </svg>
-          Feed
-        </div>
-
-        <div class="sidebar-item" id="nav-messages">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-          </svg>
-          Messages
-        </div>
-
-        <div class="sidebar-item" id="nav-notifs">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-          </svg>
-          Notifications
-        </div>
-
-        
-      </aside>
+      
+      
 
     </div><!-- end .layout -->
 
@@ -154,8 +127,7 @@ export async function createFeedPage(data) {
   document.getElementById("nav-home")
     .addEventListener("click", () => navigateTo("/"));
 
-  document.getElementById("nav-feed")
-    .addEventListener("click", () => navigateTo("/"));
+
 
   document.getElementById("modal-publish").addEventListener("click", async () => {
     const title = document.getElementById("modal-title").value.trim();
@@ -213,30 +185,7 @@ export async function createFeedPage(data) {
 }
 
 
-// function
 
-
-
-// function updateOnlineUserChat(isOnln) {
-//   const online = document.querySelector("chat-user")
-//   if (isOnln) {
-//     online.querySelector("chat-status").className = "chat-status online"
-//   } else {
-//     online.querySelector("chat-status").className = "chat-status offline"
-//   }
-// }
-
-
-
-
-
-/* Poll contacts every 30 seconds */
-
-// const contactsInterval = setInterval(renderContacts, 30_000);
-
-/* ════════════════════════════════════════
-   FEED
-════════════════════════════════════════ */
 async function renderFeed() {
   const list = document.getElementById("feed-list");
   (list);
@@ -379,10 +328,6 @@ document.body.addEventListener("click", (e) => {
     Type: "MsgSeen",
     Sender_id: Number(user.id)
   })
-  // const newMsg = contactItem.querySelector(".new-message")
-  // if (newMsg) {
-  //   newMsg.innerHTML = ""
-  // }
 });
 
 

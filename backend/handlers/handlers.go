@@ -33,6 +33,7 @@ func RegisterHandler(svc *services.UserService) http.HandlerFunc {
 			fmt.Println(err)
 			return
 		}
+		fmt.Println(data)
 		err = svc.RegisterUser(data)
 		if err != nil {
 			fmt.Println(err)
@@ -77,12 +78,18 @@ func LoginHandler(svc *services.UserService) http.HandlerFunc {
 			services.SenData(w, "error", "Failed to login user", http.StatusInternalServerError)
 			return
 		}
+		err = svc.Repo.CheckUserSession(userID)
+		if err != nil {
+			services.SenData(w, "error", "Failed to check user session", http.StatusInternalServerError)
+			return
+		}
 		session, err := svc.Repo.CreateSession(userID, username)
 		if err != nil {
 			services.SenData(w, "error", "Failed to create session", http.StatusInternalServerError)
 			return
 		}
 		middleware.SetSessionCookie(session, w)
+		broadcastOnlineUsers(userID)
 		services.SenData(w, "message", "User logged in successfully", http.StatusOK)
 	}
 }

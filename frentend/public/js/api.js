@@ -1,6 +1,6 @@
 
-import { navigateTo } from "./router.js";
-import {  showError } from "./validation.js"
+import { navigateTo,broadcastLogin,broadcastLogout } from "./router.js";
+import { showError } from "./validation.js"
 
 
 export async function sendData(data, route, method = "POST") {
@@ -13,8 +13,8 @@ export async function sendData(data, route, method = "POST") {
     if (method !== "GET") {
         options.body = JSON.stringify(data);
     }
-    try{
-        
+    try {
+
         const res = await fetch(route, options);
         const result = await res.json();
         if (res.status === 409) {
@@ -30,48 +30,40 @@ export async function sendData(data, route, method = "POST") {
             }
         }
         (res.status);
-        
+
         if (res.status === 401) {
             (result.error);
             showError(result.error, ".password");
             return;
         }
-        if (res.status === 404) {   
+        if (res.status === 404) {
             (result.error);
             showError(result.error, ".user");
             return;
         }
-       
+
         if (!res.ok) {
             ('internal server');
             return
         }
-        if (method==="GET"){
-            (result);
-            
+        if (method === "GET") {
             return result
         }
-        
         if (route === "/api/register") {
-            ('user created successfully');
             navigateTo("/login");
             return
-        }else if (route === "/api/login") {
-            ('user logged in successfully');
-            navigateTo("/");
+        } else if (route === "/api/login") {
+            broadcastLogin();
             return
-        }else if (route === "/api/logout") {
-            ('user logged out successfully');
-            navigateTo("/login");
+        } else if (route === "/api/logout") {
+            broadcastLogout();
             return
-        }else if (route==="/api/post"){
+        } else if (route === "/api/post") {
             navigateTo("/")
             return
         }
-        
         return result
     } catch (error) {
-        ('error in sending data to backend');
         console.error(error)
     }
 }

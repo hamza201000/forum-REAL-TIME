@@ -31,8 +31,6 @@ export function createLogin() {
 
 </form>
 `
-
-
     const form = document.getElementById("userForm")
     if (form) {
         form.addEventListener("submit", function (e) {
@@ -45,16 +43,13 @@ export function createLogin() {
             sendData(data, "/api/login")
         })
     }
-
     const registerlink = document.getElementById("register-link")
     if (registerlink) {
         registerlink.addEventListener("click", function (e) {
             e.preventDefault();
             navigateTo('/register');
-            
         });
     }
-
 }
 
 

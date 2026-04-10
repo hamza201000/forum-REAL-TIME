@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
@@ -19,6 +20,20 @@ type Userepository struct {
 
 func NewUserRepository(database *sql.DB) *Userepository {
 	return &Userepository{Db: database}
+}
+
+func (u *Userepository) DeleteAllConversations() error {
+	qur := "DELETE FROM conversation"
+
+	res, err := u.Db.Exec(qur)
+	if err != nil {
+		return err
+	}
+
+	rows, _ := res.RowsAffected()
+	log.Printf("Rows deleted: %d", rows)
+
+	return nil
 }
 
 func (r *Userepository) CreateUser(user models.User) error {
@@ -43,6 +58,7 @@ func (r *Userepository) GetUserId(user models.LoginRequest) (int, string, error)
 	var userID int
 	var hashedPassword string
 	var username string
+	user.Username = strings.ToLower(strings.TrimSpace(user.Username))
 	query := "SELECT id, password, username FROM users WHERE email = ? OR username = ? LIMIT 1"
 	err := r.Db.QueryRow(query, user.Username, user.Username).Scan(&userID, &hashedPassword, &username)
 	if err != nil {
@@ -56,6 +72,19 @@ func (r *Userepository) GetUserId(user models.LoginRequest) (int, string, error)
 		return 0, "", errors.New("invalid password")
 	}
 	return userID, username, nil
+}
+
+func (r *Userepository) CheckUserSession(userID int) error {
+
+	query := "DELETE FROM sessions WHERE user_id = ?"
+	err := r.Db.QueryRow(query, userID).Scan()
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil
+		}
+		return err
+	}
+	return nil
 }
 
 func (r *Userepository) CreateSession(userID int, username string) (*models.Session, error) {
@@ -192,7 +221,6 @@ func (r *Userepository) GetMessages(lastMsgID int, userID int, targetID int) ([]
 	var err error
 	fmt.Println("lastMsgID", lastMsgID)
 	if lastMsgID == 0 {
-		// first load — get the latest 10 messages
 		// fmt.Println(lastMsgID)
 		rows, err = r.Db.Query(`
         SELECT id, sender_id, receiver_id,username_sender, content FROM conversation
@@ -202,7 +230,6 @@ func (r *Userepository) GetMessages(lastMsgID int, userID int, targetID int) ([]
         LIMIT 10
     `, userID, targetID, targetID, userID, lastMsgID)
 	} else {
-		// pagination — get 10 messages older than lastMsgID
 		rows, err = r.Db.Query(`
         SELECT id, sender_id, receiver_id,username_sender, content FROM conversation
         WHERE (sender_id = ? AND receiver_id = ?
@@ -212,11 +239,6 @@ func (r *Userepository) GetMessages(lastMsgID int, userID int, targetID int) ([]
         LIMIT 10
     `, userID, targetID, targetID, userID, lastMsgID)
 	}
-
-	// query := `SELECT sender_id, receiver_id,username_sender, content FROM conversation
-	//  WHERE (sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?)
-	//  AND id > ? ORDER BY id DESC LIMIT 10`
-	// rows, err := r.Db.Query(query, userID, targetID, targetID, userID, lastMsgID)
 	if err != nil {
 		fmt.Println(err)
 		return nil, err
