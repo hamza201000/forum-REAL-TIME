@@ -996,3 +996,43 @@ textarea:focus,
 }
 .them .bubble { background: #1e1e38; border: 2px solid #3a3a60; border-radius: 14px 14px 14px 4px; }
 .me .bubble   { background: #2a2060; border: 2px solid #5a4fd4; border-radius: 14px 14px 14px 4px; }
+
+
+
+.modal-divider {
+  margin: 10px 0;
+}
+
+/* Select box */
+#modal-category {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #333;
+  background-color: #1e1e1e;
+  color: #f1f1f1;
+  font-size: 14px;
+  outline: none;
+  cursor: pointer;
+
+  /* smooth look */
+  transition: all 0.2s ease;
+}
+
+/* Hover state */
+#modal-category:hover {
+  border-color: #555;
+  background-color: #252525;
+}
+
+/* Focus state */
+#modal-category:focus {
+  border-color: #4da3ff;
+  box-shadow: 0 0 0 2px rgba(77, 163, 255, 0.2);
+}
+
+/* Option styling (limited support in some browsers) */
+#modal-category option {
+  background-color: #1e1e1e;
+  color: #f1f1f1;
+}

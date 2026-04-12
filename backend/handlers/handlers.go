@@ -139,13 +139,12 @@ func PostsHandler(svc *services.UserService) http.Handler {
 		}
 		data.UserID = session.UserID
 		data.Username = session.Username
-
-		err = svc.Repo.CreatePost(data)
+		err = svc.CheckDataPost(data)
 		if err != nil {
-			services.SenData(w, "message", "Intarnal servre", http.StatusInternalServerError)
+			fmt.Println(err)
+			services.SenData(w, "error", err.Error(), http.StatusBadRequest)
 			return
 		}
-
 		services.SenData(w, "message", "Post created successfully", http.StatusOK)
 	})
 }

@@ -131,8 +131,9 @@ func (r *Userepository) DeleteSession(token string) error {
 }
 
 func (r *Userepository) CreatePost(post models.Post) error {
-	query := "INSERT INTO posts (user_id,username, title, content) VALUES (?, ?, ?, ?)"
-	_, err := r.Db.Exec(query, post.UserID, post.Username, post.Title, post.Content)
+
+	query := "INSERT INTO posts (user_id,username, title, content, category) VALUES (?, ?, ?, ?, ?)"
+	_, err := r.Db.Exec(query, post.UserID, post.Username, post.Title, post.Content, post.Category)
 	if err != nil {
 		fmt.Println(err)
 		return err
@@ -142,7 +143,7 @@ func (r *Userepository) CreatePost(post models.Post) error {
 
 func (r *Userepository) GetAllPost() ([]models.Post, error) {
 	var posts []models.Post
-	query := "SELECT id , user_id, username, title, content, created_at FROM posts"
+	query := "SELECT id , user_id, username, title, content, category, created_at FROM posts"
 	rows, err := r.Db.Query(query)
 	if err != nil {
 		fmt.Println(err)
@@ -153,7 +154,7 @@ func (r *Userepository) GetAllPost() ([]models.Post, error) {
 	for rows.Next() {
 
 		var post models.Post
-		err = rows.Scan(&post.ID, &post.UserID, &post.Username, &post.Title, &post.Content, &post.CreatedAt)
+		err = rows.Scan(&post.ID, &post.UserID, &post.Username, &post.Title, &post.Content, &post.Category, &post.CreatedAt)
 		if err != nil {
 			return nil, err
 		}

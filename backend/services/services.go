@@ -41,13 +41,39 @@ func (s *UserService) LoginUser(data models.LoginRequest) (int, string, error) {
 	if data.Password == "" {
 		return 0, "", errors.New("password is required")
 	}
-	userID,username, err := s.Repo.GetUserId(data)
+	userID, username, err := s.Repo.GetUserId(data)
 	if err != nil {
 		fmt.Println(err)
 		return 0, "", err
 	}
-	return userID,username, nil
+	return userID, username, nil
 }
 
+func (s *UserService) CheckDataPost(post models.Post) error {
+fmt.Println("post", post)
+	if post.Title == "" || post.Content == "" || post.Category == "" {
+		return errors.New("missing required fields")
+	}
+	if !Checkcategory(post.Category) {
+		fmt.Println("Invalid category:", post.Category)
+		return errors.New("invalid category")
+	}
+	if len(post.Title) > 100 {
+		return errors.New("title must be less than 100 characters")
+	}
+	if len(post.Content) > 1000 {
+		return errors.New("content must be less than 1000 characters")
+	}
+	s.Repo.CreatePost(post)
+	return nil
+}
 
-
+func Checkcategory(category string) bool {
+	categories := []string{"general", "news", "tech", "lifestyle"}
+	for _, c := range categories {
+		if category == c {
+			return true
+		}
+	}
+	return false
+}

@@ -91,6 +91,15 @@ export async function createFeedPage(data) {
                     maxlength="1000"></textarea>
           <div class="char-count" id="modal-char-count">0 / 1000</div>
         </div>
+        <div class="modal-divider">
+          <select id="modal-category">
+            <option value="" disabled selected>Choose category</option>
+            <option value="general">General</option>
+            <option value="news">News</option>
+            <option value="tech">Tech</option>
+            <option value="lifestyle">Lifestyle</option>
+          </select>
+        </div>
         <div class="modal-actions">
           <button class="modal-publish-btn" id="modal-publish">Publish</button>
         </div>
@@ -132,9 +141,10 @@ export async function createFeedPage(data) {
   document.getElementById("modal-publish").addEventListener("click", async () => {
     const title = document.getElementById("modal-title").value.trim();
     const content = document.getElementById("modal-body").value.trim();
+    const categorySelect = document.getElementById("modal-category").value.trim();
     if (!title || !content) return;
     try {
-      await sendData({ title, content }, "/api/posts", "POST");
+      await sendData({ title, content, category: categorySelect }, "/api/posts", "POST");
       closeModal(overlay);
       renderFeed();
     } catch (err) {
@@ -234,6 +244,7 @@ async function renderFeed() {
             <p class="post-body">${escHtml(p.content)}</p>
 
             <div class="post-meta">
+              <span>${p.category}</span>
               <span>·</span>
               <span>${formatTime(p.createdAt)} min read</span>
             </div>

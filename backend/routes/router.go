@@ -26,7 +26,7 @@ func RegisterRoutes(DB *sql.DB) http.Handler {
 	mux.Handle("/api/session", middleware.AuthMiddleware(handlers.SessionHandler(), userService))
 	mux.Handle("/api/logout", handlers.LogoutHandler(userService))
 	mux.Handle("/api/posts", middleware.AuthMiddleware(handlers.PostsHandler(userService), userService))
-	mux.Handle("/api/getPosts", handlers.GetPost(userService))
+	mux.Handle("/api/getPosts", middleware.AuthMiddleware(handlers.GetPost(userService), userService))
 	mux.Handle("/api/allUsers", middleware.AuthMiddleware(handlers.GetAllUsers(userService), userService))
 	mux.Handle("/api/getMessages", middleware.AuthMiddleware(handlers.GetMessages(userService), userService))
 	mux.Handle("/api/online-users", middleware.AuthMiddleware(handlers.StatusHandler(userService), userService))
