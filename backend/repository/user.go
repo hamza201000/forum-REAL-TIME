@@ -131,7 +131,7 @@ func (r *Userepository) GetAllPost(userID int) ([]models.Post, error) {
 
 		var post models.Post
 		var isLiked int
-		err = rows.Scan(&post.ID, &post.UserID, &post.Username, &post.Title, &post.Content, &post.CreatedAt, &post.LikeCount, &post.IsLiked)
+		err = rows.Scan(&post.ID, &post.UserID, &post.Username, &post.Title, &post.Content, &post.CreatedAt, &post.LikeCount, &isLiked)
 		if err != nil {
 			return nil, err
 		}

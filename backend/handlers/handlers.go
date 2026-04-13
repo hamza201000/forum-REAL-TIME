@@ -145,10 +145,16 @@ func PostsHandler(svc *services.UserService) http.Handler {
 
 func GetPost(svc *services.UserService) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		posts, err := svc.Repo.GetAllPost(r.Context().Value("userID").(int))
-		if err != nil {
+		var userID int = 0
 
-			services.SenData(w, "message", "Intarnal server error", http.StatusInternalServerError)
+		session, ok := services.GetSession(r.Context())
+		if ok {
+			userID = session.UserID
+		}
+
+		posts, err := svc.Repo.GetAllPost(userID)
+		if err != nil {
+			services.SenData(w, "message", "Internal server error", http.StatusInternalServerError)
 			return
 		}
 		services.SenData(w, "allpost", posts, http.StatusOK)
