@@ -185,7 +185,7 @@ func (r *Userepository) InsertMessage(message models.DataMessage) (int, error) {
 	return messageID, nil
 }
 
-func (r *Userepository) GetMessages(lastMsgID int,userID int, targetID int) ([]models.DataMessage, error) {
+func (r *Userepository) GetMessages(lastMsgID int, userID int, targetID int) ([]models.DataMessage, error) {
 	var messages []models.DataMessage
 	query := `SELECT sender_id, receiver_id,username_sender, content FROM conversation
 	 WHERE (sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?) 
@@ -228,4 +228,36 @@ func (r *Userepository) GetUserStatus(userID int) (bool, error) {
 		return false, err
 	}
 	return isOnline, nil
+}
+
+// ////////////////////////
+// /likes repository///////
+// ////////////////////////
+// AddLike adds a like to a post by a user
+func (r *Userepository) AddLike(userID int, postID int) error {
+	query := "INSERT INTO likes (user_id, post_id) VALUES (?, ?)"
+	_, err := r.Db.Exec(query, userID, postID)
+	return err
+}
+
+func (r *Userepository) RemoveLike(userID int, postID int) error {
+	query := "DELETE FROM likes WHERE user_id = ? AND post_id = ?"
+	_, err := r.Db.Exec(query, userID, postID)
+	return err
+}
+
+// IsPostLikedByUser checks if a post is liked by a specific user
+func (r *Userepository) IsPostLikedByUser(userID int, postID int) (bool, error) {
+	query := "SELECT COUNT(*) FROM likes WHERE user_id = ? AND post_id = ?"
+	var count int
+	err := r.Db.QueryRow(query, userID, postID).Scan(&count)
+	return count > 0, err
+}
+
+// GetPostLikeCount returns the total number of likes for a specific post
+func (r *Userepository) GetPostLikeCount(postID int) (int, error) {
+	query := "SELECT COUNT(*) FROM likes WHERE post_id = ?"
+	var count int
+	err := r.Db.QueryRow(query, postID).Scan(&count)
+	return count, err
 }
