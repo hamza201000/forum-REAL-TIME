@@ -38,6 +38,8 @@ type Post struct {
 	Title     string    `json:"title"`
 	Content   string    `json:"content"`
 	CreatedAt time.Time `json:"created_at"`
+	LikeCount int       `json:"like_count"`
+	IsLiked   bool      `json:"is_liked"`
 }
 
 type Client struct {
@@ -63,7 +65,6 @@ type Loadmsg struct {
 	Type    string `json:"type"`
 	LastMsg int    `json:"lastMsg"`
 	UserID  int    `json:"userID"`
-
 }
 
 // type SenderMessage struct {
