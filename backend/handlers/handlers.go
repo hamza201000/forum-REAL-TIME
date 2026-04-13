@@ -145,8 +145,9 @@ func PostsHandler(svc *services.UserService) http.Handler {
 
 func GetPost(svc *services.UserService) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		posts, err := svc.Repo.GetAllPost()
+		posts, err := svc.Repo.GetAllPost(r.Context().Value("userID").(int))
 		if err != nil {
+
 			services.SenData(w, "message", "Intarnal server error", http.StatusInternalServerError)
 			return
 		}
@@ -194,4 +195,34 @@ func GetMessages(svc *services.UserService) http.Handler {
 		fmt.Println(AllMessages)
 		services.SenData(w, "allmessages", AllMessages, http.StatusOK)
 	})
+}
+
+func LikePostHandler(svc *services.UserService) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		session, _ := services.GetSession(r.Context())
+
+		if r.Method == http.MethodPost {
+			var data map[string]int
+			json.NewDecoder(r.Body).Decode(&data)
+			postID := data["post_id"]
+
+			err := svc.Repo.AddLike(session.UserID, postID)
+			if err != nil {
+				services.SenData(w, "error", "Failed to like post", http.StatusInternalServerError)
+				return
+			}
+			services.SenData(w, "message", "Post liked", http.StatusOK)
+		} else if r.Method == http.MethodDelete {
+			var data map[string]int
+			json.NewDecoder(r.Body).Decode(&data)
+			postID := data["post_id"]
+
+			err := svc.Repo.RemoveLike(session.UserID, postID)
+			if err != nil {
+				services.SenData(w, "error", "Failed to unlike post", http.StatusInternalServerError)
+				return
+			}
+			services.SenData(w, "message", "Post unliked", http.StatusOK)
+		}
+	}
 }
