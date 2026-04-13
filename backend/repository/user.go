@@ -111,10 +111,16 @@ func (r *Userepository) CreatePost(post models.Post) error {
 	return nil
 }
 
-func (r *Userepository) GetAllPost() ([]models.Post, error) {
+func (r *Userepository) GetAllPost(userID int) ([]models.Post, error) {
 	var posts []models.Post
-	query := "SELECT id , user_id, username, title, content, created_at FROM posts"
-	rows, err := r.Db.Query(query)
+	query := `SELECT p.id, p.user_id, p.username, p.title, p.content, p.created_at,
+                    COUNT(l.user_id) as like_count,
+                    CASE WHEN EXISTS(SELECT 1 FROM likes WHERE user_id = ? AND post_id = p.id) THEN 1 ELSE 0 END as is_liked
+             FROM posts p
+             LEFT JOIN likes l ON p.id = l.post_id
+             GROUP BY p.id
+             ORDER BY p.created_at DESC`
+	rows, err := r.Db.Query(query,userID)
 	if err != nil {
 		fmt.Println(err)
 		return nil, err
@@ -124,11 +130,12 @@ func (r *Userepository) GetAllPost() ([]models.Post, error) {
 	for rows.Next() {
 
 		var post models.Post
-		err = rows.Scan(&post.ID, &post.UserID, &post.Username, &post.Title, &post.Content, &post.CreatedAt)
+		var isLiked int
+		err = rows.Scan(&post.ID, &post.UserID, &post.Username, &post.Title, &post.Content, &post.CreatedAt, &post.LikeCount, &post.IsLiked)
 		if err != nil {
 			return nil, err
 		}
-
+		post.IsLiked = isLiked == 1
 		posts = append(posts, post)
 	}
 	return posts, nil
