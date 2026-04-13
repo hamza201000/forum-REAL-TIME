@@ -105,6 +105,8 @@ export async function createFeedPage(data) {
         </div>
       </div>
     </div>
+    
+</div>
     <div id="chat-container"></div>
   `;
   renderFeed();
@@ -205,6 +207,7 @@ async function renderFeed() {
   try {
     const res = await sendData({}, "/api/getPosts", "GET");
     const posts = res?.allpost ?? [];
+    console.log(posts);
 
     if (posts.length === 0) {
       list.innerHTML = `
@@ -220,29 +223,19 @@ async function renderFeed() {
       const initial = (p.username || "U")[0].toUpperCase();
       const liked = p.likedBy?.includes(user.username);
       return `
-          <article class="post-card" data-index="${idx}">
+          <article class="post-card" data-index="${idx}" id = "post-${p.id}">
             <div class="post-card-header">
               <div class="post-card-header-left">
                 <div class="post-avatar">${initial}</div>
                 <div>
                   <span class="post-username">${escHtml(p.username || "Unknown")}</span>
-                  <span class="post-time">${formatTime(p.createdAt)}</span>
-                </div>
+                  <span class="post-time">${formatTime(p.createdAt)}</span>                
+                  </div>
               </div>
-              <button class="post-menu-btn" aria-label="Options">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                  <circle cx="5" cy="12" r="2"/>
-                  <circle cx="12" cy="12" r="2"/>
-                  <circle cx="19" cy="12" r="2"/>
-                </svg>
-              </button>
             </div>
-
             <div class="post-divider"></div>
-
             <h2 class="post-title">${escHtml(p.title)}</h2>
             <p class="post-body">${escHtml(p.content)}</p>
-
             <div class="post-meta">
               <span>${p.category}</span>
               <span>·</span>
@@ -251,19 +244,12 @@ async function renderFeed() {
 
             <div class="post-actions">
               <button class="like-btn ${liked ? "liked" : ""}" data-postid="${p.id}">
-                <svg width="15" height="15" viewBox="0 0 24 24"
-                     fill="${liked ? "currentColor" : "none"}"
-                     stroke="currentColor" stroke-width="2"
-                     stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67
-                           l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78
-                           l1.06 1.06L12 21.23l7.78-7.78
-                           1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-                </svg>
-                <span>${p.likes ?? 0} Likes</span>
+                <span id="likenmb-${p.id}" style="color: ${p.like_usr === 1 ? 'red' : 'inherit'}">
+                  ${p.allLikes ?? 0} Likes
+                </span>
               </button>
 
-              <button class="comment-icon-btn">
+              <button class="comment-icon-btn" data-id="${p.id}">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
                      stroke="currentColor" stroke-width="2"
                      stroke-linecap="round" stroke-linejoin="round">
@@ -273,7 +259,11 @@ async function renderFeed() {
                 <span>Comment</span>
               </button>
             </div>
-          </article>`;
+          </article>
+       
+          `
+
+        ;
     }).join("");
 
     /* Like button events */
@@ -281,8 +271,17 @@ async function renderFeed() {
       btn.addEventListener("click", async () => {
         const postId = btn.dataset.postid;
         try {
-          await sendData({ postId }, "/api/like", "POST");
-          renderFeed(); /* re-fetch to get accurate server state */
+          console.log("Liking post", postId);
+          await sendData({ postId: Number(postId) }, "/api/like", "POST");
+          // renderFeed(); /* re-fetch to get accurate server state */
+          const likeCountSpan = document.getElementById("likenmb-" + postId);
+          if (likeCountSpan.style.color === "red") {
+            likeCountSpan.style.color = "";
+            likeCountSpan.textContent = parseInt(likeCountSpan.textContent) - 1 + " Likes";
+            return;
+          }
+          likeCountSpan.style.color = "red";
+          likeCountSpan.textContent = parseInt(likeCountSpan.textContent) + 1 + " Likes";
         } catch (err) {
           console.error("Like failed:", err);
         }
@@ -344,8 +343,97 @@ document.body.addEventListener("click", (e) => {
 
 
 
+document.addEventListener("click", async (e) => {
+
+  // open popup
+  const commentBtn = e.target.closest(".comment-icon-btn");
+  if (commentBtn) {
+    const postId = commentBtn.dataset.id;
+    const post = document.getElementById("post-" + postId);
+    // remove old modal if exists
+    document.querySelector(".modal-overlay")?.remove();
+    try {
+      const res = await sendData({}, `/api/getComments?postId=${postId}`, "GET");
+      const comments = res?.comments || [];
+      console.log(comments);
+
+      const commentList = comments.map(c => `
+        <div class="comment-item">
+          <div class="comment-header">
+            <div class="comment-avatar">${c.username[0].toUpperCase()}</div>
+            <div>
+              <span class="comment-username">${escHtml(c.username)}</span>
+              <span class="comment-time">${formatTime(c.createdAt)}</span>
+            </div>
+          </div>
+          <p class="comment-content">${escHtml(c.content)}</p>
+        </div>
+      `).join("");
+      document.body.insertAdjacentHTML("beforeend", openPopup(post.innerHTML, postId));
+      const commentListContainer = document.getElementById("comment-list-" + postId);
+      commentListContainer.innerHTML = commentList || `<p style="text-align:center;color:#666">No comments yet.</p>`;
+    } catch (err) {
+      console.error("Failed to load comments:", err);
+    }
 
 
+    // document.body.insertAdjacentHTML("beforeend", openPopup(post.innerHTML, postId));
+    return;
+  }
+
+  // close modal when clicking the overlay background
+  const overlay = e.target.closest(".modal-overlay");
+  if (overlay && e.target === overlay) {
+    overlay.remove();
+    return;
+  }
+
+  // send comment
+  const sendBtn = e.target.closest(".send-comment-btn");
+  if (sendBtn) {
+    const postId = sendBtn.id.replace("send-btn-", "");
+    const input = document.getElementById("comment-input-" + postId);
+    const content = input.value.trim();
+    if (!content) return;
+    sendBtn.disabled = true;
+    await sendData({ content, postId: Number(postId) }, "/api/comments", "POST")
+      .then(() => {
+        input.value = "";
+        input.style.height = "auto";
+      })
+      .catch(err => {
+        console.error("Failed to post comment:", err);
+      })
+      .finally(() => {
+        sendBtn.disabled = false;
+      });
+    return;
+  }
+
+});
+
+
+function openPopup(contnainer, postId) {
+  // activePostId = postId;
+  return `<div class="modal-overlay active" id="modal-overlay">
+      <div class="modal-card" id="modal-card">
+        ${contnainer}
+        <div class="comment-section" id="comment-section-${postId || 0}">
+  <!-- Input -->
+  <div class="comment-input-row">
+    <textarea id="comment-input-${postId || 0}" placeholder="Write a comment…" rows="1"></textarea>
+    <button class="send-comment-btn" id="send-btn-${postId || 0}" >Post</button>
+  </div>
+  <!-- List -->
+  <div class="comment-list" id="comment-list-${postId || 0}">
+    <div class="comments-loading">Loading comments…</div>
+  </div>
+</div>
+      </div>
+    </div>
+</div>`
+
+}
 
 
 

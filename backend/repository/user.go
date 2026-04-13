@@ -141,24 +141,38 @@ func (r *Userepository) CreatePost(post models.Post) error {
 	return nil
 }
 
-func (r *Userepository) GetAllPost() ([]models.Post, error) {
+func (r *Userepository) GetAllPost(userId int) ([]models.Post, error) {
 	var posts []models.Post
-	query := "SELECT id , user_id, username, title, content, category, created_at FROM posts"
-	rows, err := r.Db.Query(query)
+	query := `SELECT 
+    p.id,
+    p.user_id,
+    p.username,
+    p.title,
+    p.content,
+    p.category,
+    p.created_at,
+
+    (SELECT COUNT(*) FROM likes l WHERE l.post_id = p.id) AS allLikes,
+
+    (SELECT COUNT(*) 
+     FROM likes l 
+     WHERE l.post_id = p.id AND l.user_id = ?) AS LikeUsr
+
+FROM posts p
+ORDER BY p.created_at ASC;`
+	rows, err := r.Db.Query(query, userId)
 	if err != nil {
 		fmt.Println(err)
 		return nil, err
 	}
 	defer rows.Close()
-
 	for rows.Next() {
-
 		var post models.Post
-		err = rows.Scan(&post.ID, &post.UserID, &post.Username, &post.Title, &post.Content, &post.Category, &post.CreatedAt)
+		err = rows.Scan(&post.ID, &post.UserID, &post.Username, &post.Title, &post.Content, 
+			&post.Category,&post.CreatedAt, &post.AllLikes, &post.LikeUsr)
 		if err != nil {
 			return nil, err
 		}
-
 		posts = append(posts, post)
 	}
 	return posts, nil
@@ -217,7 +231,6 @@ func (r *Userepository) InsertMessage(message models.DataMessage) (int, error) {
 
 func (r *Userepository) GetMessages(lastMsgID int, userID int, targetID int) ([]models.DataMessage, error) {
 	var messages []models.DataMessage
-
 	var rows *sql.Rows
 	var err error
 	fmt.Println("lastMsgID", lastMsgID)
@@ -278,3 +291,50 @@ func (r *Userepository) GetUserStatus(userID int) (bool, error) {
 	}
 	return isOnline, nil
 }
+
+func (r *Userepository) LikePost(postID int, userID int) error {
+	
+	query := "INSERT INTO likes (post_id, user_id) VALUES (?, ?)"
+	_, err := r.Db.Exec(query, postID, userID)
+	if err != nil {
+		if strings.Contains(err.Error(), "UNIQUE") {
+			query := "DELETE FROM likes WHERE post_id = ? AND user_id = ?"
+			_, err := r.Db.Exec(query, postID, userID)
+			if err != nil {
+				return err
+			}
+			return nil
+		}
+		return err
+	}
+	return nil
+}
+
+func (r *Userepository) AddComment(postID int, userID int, username string, content string) error {
+	query := "INSERT INTO comments (post_id, user_id, username, content) VALUES (?, ?, ?, ?)"
+	_, err := r.Db.Exec(query, postID, userID, username, content)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *Userepository) GetComments(postID int) ([]models.Comment, error) {
+	var comments []models.Comment
+	fmt.Println("postID in repo", postID)
+	query := "SELECT id, user_id, username, content, created_at FROM comments WHERE post_id = ? ORDER BY created_at ASC"
+	rows, err := r.Db.Query(query, postID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var comment models.Comment
+		err = rows.Scan(&comment.ID, &comment.UserID, &comment.Username, &comment.Content, &comment.CreatedAt)
+		if err != nil {
+			return nil, err
+		}
+		comments = append(comments, comment)
+	}
+	return comments, nil
+}	

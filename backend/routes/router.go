@@ -30,11 +30,11 @@ func RegisterRoutes(DB *sql.DB) http.Handler {
 	mux.Handle("/api/allUsers", middleware.AuthMiddleware(handlers.GetAllUsers(userService), userService))
 	mux.Handle("/api/getMessages", middleware.AuthMiddleware(handlers.GetMessages(userService), userService))
 	mux.Handle("/api/online-users", middleware.AuthMiddleware(handlers.StatusHandler(userService), userService))
-
-	
+	mux.Handle("/api/like", middleware.AuthMiddleware(handlers.LikeHandler(userService), userService))
+	mux.Handle("/api/comments",middleware.AuthMiddleware(handlers.CommentHandler(userService), userService))
+	mux.Handle("/api/getComments",middleware.AuthMiddleware(handlers.GetCommentsHandler(userService), userService))
 	// Optionally serve the index.html (or other entry point) for the root path (/)
 	mux.Handle("/", (handlers.HomeHandler()))
-
 	mux.Handle("/api/ws", middleware.AuthMiddleware(handlers.WsHandle(userService), userService))
 	return mux
 }

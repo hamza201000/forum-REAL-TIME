@@ -38,6 +38,8 @@ type Post struct {
 	Title     string    `json:"title"`
 	Content   string    `json:"content"`
 	Category  string    `json:"category"`
+	AllLikes  int       `json:"allLikes"`
+	LikeUsr int       `json:"like_usr"`
 	CreatedAt time.Time `json:"created_at"`
 }
 
@@ -66,14 +68,18 @@ type Loadmsg struct {
 	UserID  int    `json:"userID"`
 }
 
-// type SenderMessage struct {
-// 	Type string `json:"type"`
-// 	Username_sender string
-// 	Sender_id int `json:"Sender_id"`
-// 	Receiver_id     int    `json:"Receiver_id"`
-// 	Message string `json:"Message"`
-// }
+type Like struct {
+	ID        int       `json:"id"`
+	UserID    int       `json:"user_id"`
+	PostID    int       `json:"postId"`
+	CreatedAt time.Time `json:"created_at"`
+}
 
-// type DataConversation struct{
-
-// }
+type Comment struct {
+	ID        int       `json:"id"`
+	UserID    int       `json:"user_id"`
+	PostID    int       `json:"postId"`
+	Username  string    `json:"username"`
+	Content   string    `json:"content"`
+	CreatedAt time.Time `json:"created_at"`
+}
