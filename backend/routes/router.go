@@ -15,11 +15,10 @@ func RegisterRoutes(DB *sql.DB) http.Handler {
 	// Initialize user repository and service
 	userRepo := repository.NewUserRepository(DB)
 	userService := services.NewUserService(userRepo)
-	// userRepo.DeleteAllConversations()
+	// userRepo.DeleteFromDB()
 	// Serve static files for requests that are not API endpoints (e.g., /login, /register)
 	fs := http.FileServer(http.Dir("../frentend/public"))
 	mux.Handle("/static/", http.StripPrefix("/static", fs)) // Serve static files under /static path
-
 	// Register API routes
 	mux.Handle("/api/register", handlers.RegisterHandler(userService)) // Handle /register POST requests
 	mux.Handle("/api/login", handlers.LoginHandler(userService))       // Handle /login POST requests

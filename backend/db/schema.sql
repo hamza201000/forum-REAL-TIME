@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS users (
     firstname TEXT NOT NULL,
     lastname TEXT NOT NULL,
     -- is_online INTEGER DEFAULT 0,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    created_at TEXT DEFAULT (datetime('now'))
 );
 
 CREATE TABLE IF NOT EXISTS sessions (
@@ -62,7 +62,7 @@ CREATE TABLE IF NOT EXISTS conversation(
     receiver_id REFERENCES users(id),
     content TEXT NOT NULL,
     seen INTEGER DEFAULT 0,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TEXT DEFAULT (datetime('now'))
 );
 
 

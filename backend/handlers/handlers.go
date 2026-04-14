@@ -79,11 +79,11 @@ func LoginHandler(svc *services.UserService) http.HandlerFunc {
 			services.SenData(w, "error", "Failed to login user", http.StatusInternalServerError)
 			return
 		}
-		// err = svc.Repo.CheckUserSession(userID)
-		// if err != nil {
-		// 	services.SenData(w, "error", "Failed to check user session", http.StatusInternalServerError)
-		// 	return
-		// }
+		err = svc.Repo.CheckUserSession(userID)
+		if err != nil {
+			services.SenData(w, "error", "Failed to check user session", http.StatusInternalServerError)
+			return
+		}
 		session, err := svc.Repo.CreateSession(userID, username)
 		if err != nil {
 			services.SenData(w, "error", "Failed to create session", http.StatusInternalServerError)
@@ -251,7 +251,7 @@ func CommentHandler(svc *services.UserService) http.HandlerFunc {
 			http.Error(w, "Bad Request", http.StatusBadRequest)
 			return
 		}
-		fmt.Println("commentData", commentData)
+		fmt.Println("commentData", commentData.PostID)
 		err = svc.Repo.AddComment(commentData.PostID, session.UserID, session.Username, commentData.Content)
 		if err != nil {
 			fmt.Println(err)
@@ -273,14 +273,14 @@ func GetCommentsHandler(svc *services.UserService) http.HandlerFunc {
 		postIDStr := r.URL.Query().Get("postId")
 		postID, err := strconv.Atoi(postIDStr)
 		if err != nil {
-			fmt.Println("err of atoi",err)
+			fmt.Println("err of atoi", err)
 			http.Error(w, "Bad Request", http.StatusBadRequest)
 			return
 		}
 		fmt.Println("postID", postID)
 		comments, err := svc.Repo.GetComments(postID)
 		if err != nil {
-			fmt.Println("err of data base",err)
+			fmt.Println("err of data base", err)
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			return
 		}

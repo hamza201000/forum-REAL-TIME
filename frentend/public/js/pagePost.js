@@ -5,7 +5,7 @@ import { addMessage, openChat } from "./chat.js";
 import { escHtml, formatTime, safeSend } from "./helpers.js";
 import { connectSocket, socket } from "./helpers.js";
 import { updateOnlineCount, updatenewMsg, updateOnlineUsers, renderCount } from "./renderContacts.js";
-
+import { navigateTo } from "./router.js"
 
 export async function createFeedPage(data) {
   connectSocket()
@@ -13,6 +13,7 @@ export async function createFeedPage(data) {
   const user = data || "User";
   const avatar = (user || "U")[0].toUpperCase();
 
+  console.log(localStorage.getItem("session_token"));
 
   app.innerHTML = `
     <!-- ══ NAVBAR ══ -->
@@ -107,6 +108,9 @@ export async function createFeedPage(data) {
     </div>
     
 </div>
+<div class="modal-overlay" id="post-popup">
+    
+</div>
     <div id="chat-container"></div>
   `;
   renderFeed();
@@ -186,7 +190,8 @@ export async function createFeedPage(data) {
         if (contactUser) {
           socket.send(JSON.stringify({
             Type: "MsgSeen",
-            Sender_id: Number(data.Sender_id)
+            Sender_id: Number(data.Sender_id),
+            created_at: Date.now()
           }))
         }
       }
@@ -219,32 +224,35 @@ async function renderFeed() {
     }
 
     list.innerHTML = posts.map((p, i) => {
-      const idx = posts.length - 1 - i;
+
       const initial = (p.username || "U")[0].toUpperCase();
       const liked = p.likedBy?.includes(user.username);
+      console.log(p.created_at);
+
       return `
-          <article class="post-card" data-index="${idx}" id = "post-${p.id}">
+          <article class="post-card"  id = "post-${p.id}">
             <div class="post-card-header">
               <div class="post-card-header-left">
                 <div class="post-avatar">${initial}</div>
                 <div>
                   <span class="post-username">${escHtml(p.username || "Unknown")}</span>
-                  <span class="post-time">${formatTime(p.createdAt)}</span>                
+                  <span class="post-time">${formatTime(p.created_at)}</span>                
                   </div>
               </div>
             </div>
-            <div class="post-divider"></div>
+            <div class="post-meta">
+            <span>${p.category}</span>
+              <span>·</span>
+             
+            </div>
+            <div class="post-divider" ></div>
+            <div class="post-face" data-index="${p.id}">
             <h2 class="post-title">${escHtml(p.title)}</h2>
             <p class="post-body">${escHtml(p.content)}</p>
-            <div class="post-meta">
-              <span>${p.category}</span>
-              <span>·</span>
-              <span>${formatTime(p.createdAt)} min read</span>
             </div>
-
             <div class="post-actions">
-              <button class="like-btn ${liked ? "liked" : ""}" data-postid="${p.id}">
-                <span id="likenmb-${p.id}" style="color: ${p.like_usr === 1 ? 'red' : 'inherit'}">
+              <button class="like-btn" ${liked ? "liked" : ""} data-postid="${p.id}">
+                <span class="likenmb-${p.id}" style="color: ${p.like_usr === 1 ? 'red' : ''}">
                   ${p.allLikes ?? 0} Likes
                 </span>
               </button>
@@ -260,34 +268,9 @@ async function renderFeed() {
               </button>
             </div>
           </article>
-       
           `
-
         ;
     }).join("");
-
-    /* Like button events */
-    list.querySelectorAll(".like-btn").forEach(btn => {
-      btn.addEventListener("click", async () => {
-        const postId = btn.dataset.postid;
-        try {
-          console.log("Liking post", postId);
-          await sendData({ postId: Number(postId) }, "/api/like", "POST");
-          // renderFeed(); /* re-fetch to get accurate server state */
-          const likeCountSpan = document.getElementById("likenmb-" + postId);
-          if (likeCountSpan.style.color === "red") {
-            likeCountSpan.style.color = "";
-            likeCountSpan.textContent = parseInt(likeCountSpan.textContent) - 1 + " Likes";
-            return;
-          }
-          likeCountSpan.style.color = "red";
-          likeCountSpan.textContent = parseInt(likeCountSpan.textContent) + 1 + " Likes";
-        } catch (err) {
-          console.error("Like failed:", err);
-        }
-      });
-    });
-
   } catch (err) {
     console.error("Failed to load feed:", err);
     list.innerHTML = `
@@ -297,11 +280,36 @@ async function renderFeed() {
         </div>`;
   }
 }
+document.addEventListener("click", async (e) => {
+  const btn = e.target.closest(".like-btn")
+  if (!btn) return
+  const postId = btn.dataset.postid;
+  try {
+    console.log("Liking post", postId);
+    await sendData({ postId: Number(postId) }, "/api/like", "POST");
+    // renderFeed(); /* re-fetch to get accurate server state */
+    let i = 0
+    document.querySelectorAll(".likenmb-" + postId).forEach(like => {
+      i++
 
+
+      if (like.style.color === "red") {
+        like.style.color = "";
+        like.textContent = parseInt(like.textContent) - 1 + " Likes";
+        return;
+      }
+      like.style.color = "red";
+      like.textContent = parseInt(like.textContent) + 1 + " Likes";
+    })
+    console.log("i=", i);
+  } catch (err) {
+    console.error("Like failed:", err);
+  }
+});
 
 function openModal(element) {
   element.classList.add("active");
-  document.getElementById("modal-title").focus();
+  // document.getElementById("modal-title").focus();
 }
 
 function closeModal(element) {
@@ -346,45 +354,30 @@ document.body.addEventListener("click", (e) => {
 document.addEventListener("click", async (e) => {
 
   // open popup
-  const commentBtn = e.target.closest(".comment-icon-btn");
+  const commentBtn = e.target.closest(".comment-icon-btn") || e.target.closest(".post-face");
+  const isactv = document.getElementById("post-popup")
   if (commentBtn) {
-    const postId = commentBtn.dataset.id;
+    const postId = commentBtn.dataset.id || commentBtn.dataset.index
     const post = document.getElementById("post-" + postId);
-    // remove old modal if exists
-    document.querySelector(".modal-overlay")?.remove();
-    try {
-      const res = await sendData({}, `/api/getComments?postId=${postId}`, "GET");
-      const comments = res?.comments || [];
-      console.log(comments);
-
-      const commentList = comments.map(c => `
-        <div class="comment-item">
-          <div class="comment-header">
-            <div class="comment-avatar">${c.username[0].toUpperCase()}</div>
-            <div>
-              <span class="comment-username">${escHtml(c.username)}</span>
-              <span class="comment-time">${formatTime(c.createdAt)}</span>
-            </div>
-          </div>
-          <p class="comment-content">${escHtml(c.content)}</p>
-        </div>
-      `).join("");
-      document.body.insertAdjacentHTML("beforeend", openPopup(post.innerHTML, postId));
-      const commentListContainer = document.getElementById("comment-list-" + postId);
-      commentListContainer.innerHTML = commentList || `<p style="text-align:center;color:#666">No comments yet.</p>`;
-    } catch (err) {
-      console.error("Failed to load comments:", err);
+    if (isactv && isactv.classList.contains("active")) {
+      return
     }
-
+    // isactv.innerHTML=openPopup(post.innerHTML, postId)
+    isactv.innerHTML=openPopup(post.innerHTML, postId)
+    isactv.classList.add("active");
+    // remove old modal if exists
+    // document.querySelector(".modal-overlay")?.remove();
+    await refreshComments(postId)
 
     // document.body.insertAdjacentHTML("beforeend", openPopup(post.innerHTML, postId));
     return;
   }
 
   // close modal when clicking the overlay background
-  const overlay = e.target.closest(".modal-overlay");
-  if (overlay && e.target === overlay) {
-    overlay.remove();
+  // const overlay = e.target.closest(".modal-overlay");
+  if (e.target === isactv) {
+    isactv.classList.remove("active");
+    isactv.innerHTML = ""
     return;
   }
 
@@ -395,7 +388,7 @@ document.addEventListener("click", async (e) => {
     const input = document.getElementById("comment-input-" + postId);
     const content = input.value.trim();
     if (!content) return;
-    sendBtn.disabled = true;
+
     await sendData({ content, postId: Number(postId) }, "/api/comments", "POST")
       .then(() => {
         input.value = "";
@@ -407,6 +400,9 @@ document.addEventListener("click", async (e) => {
       .finally(() => {
         sendBtn.disabled = false;
       });
+    const commList = document.getElementById("comment-list-" + postId)
+    if (!commList) return
+    await refreshComments(postId)
     return;
   }
 
@@ -415,7 +411,7 @@ document.addEventListener("click", async (e) => {
 
 function openPopup(contnainer, postId) {
   // activePostId = postId;
-  return `<div class="modal-overlay active" id="modal-overlay">
+  return `
       <div class="modal-card" id="modal-card">
         ${contnainer}
         <div class="comment-section" id="comment-section-${postId || 0}">
@@ -431,11 +427,44 @@ function openPopup(contnainer, postId) {
 </div>
       </div>
     </div>
-</div>`
+`
 
 }
 
 
 
+async function refreshComments(postId) {
+  const commentListContainer = document.getElementById("comment-list-" + postId);
+  if (!commentListContainer) return;
 
+  commentListContainer.innerHTML = `<div class="comments-loading">Loading comments…</div>`;
+
+  try {
+    const res = await sendData({}, `/api/getComments?postId=${postId}`, "GET");
+    const comments = res?.comments || [];
+    console.log(comments);
+    console.log(postId);
+
+    const commentList = comments.map(c => `
+          <div class="comment-item">
+            <div class="comment-header">
+              <div class="comment-avatar">${c.username[0].toUpperCase()}</div>
+              <div>
+                <span class="comment-username">${escHtml(c.username)}</span>
+                
+              </div>
+            </div>
+            <p class="comment-content">${escHtml(c.content)}</p>
+          </div>
+        `).join("")
+
+
+    commentListContainer.innerHTML = commentList || `<p style="text-align:center;color:#666">No comments yet.</p>`;
+    commentListContainer.scrollTop = commentListContainer.scrollHeight;
+
+  } catch (err) {
+    console.error("Failed to refresh comments:", err);
+    commentList.innerHTML = `<p style="color:red;text-align:center">Failed to load comments.</p>`;
+  }
+}
 

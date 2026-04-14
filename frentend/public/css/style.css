@@ -625,6 +625,10 @@ textarea:focus,
   gap: 14px;
   animation: fadeUp .35s ease both;
   transition: border-color .2s, box-shadow .2s;
+  
+}
+.post-face{
+  cursor: pointer;
 }
 
 .post-card:hover {
@@ -823,7 +827,8 @@ textarea:focus,
 .fab {
   position: fixed;
   bottom: 28px;
-  right: calc(var(--nav-w) + 20px);
+  top: 122px;
+  right: calc(var(--nav-w) + 6px);
   width: 52px;
   height: 52px;
   border-radius: 50%;
@@ -855,7 +860,7 @@ textarea:focus,
   background: rgba(0, 0, 0, .65);
   backdrop-filter: blur(6px);
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: center;
   z-index: 300;
   opacity: 0;
@@ -873,10 +878,12 @@ textarea:focus,
   border: 1px solid var(--border2);
   width: 100%;
   max-width: 560px;
+  max-height: 90vh;
   border-radius: 20px 20px 0 0;
   padding: 22px 22px 36px;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
   gap: 14px;
   transform: translateY(60px);
   transition: transform .3s cubic-bezier(.34, 1.26, .64, 1);
@@ -1233,10 +1240,10 @@ position: fixed;
 #chat-container {
   position: fixed;
   bottom: 0;
-  right: 20px;
-  display: flex;
+  right: 150px;
+  /* display: flex;
   flex-direction: row;
-  align-items: flex-end;
+  align-items: flex-end; */
   gap: 8px;
   z-index: 500;
 }
@@ -1336,11 +1343,22 @@ position: fixed;
   align-self: flex-end;
 }
 
-/* Messages you RECEIVE → left side */
 .message.them {
+  
   align-self: flex-start;
 }
+.bubble {
+   position: relative;
+  display: block;              
+  padding: 8px 12px;
+  background: #dcf8c6;
+  border-radius: 12px;
+  max-width: 300px;
 
+  white-space: normal;         
+  overflow-wrap: break-word;   
+  word-break: break-word;      
+}
 .them .bubble {
   background: #1e1e38;
   border: 2px solid #3a3a60;
@@ -1351,6 +1369,7 @@ position: fixed;
   background: #2a2060;
   border: 2px solid #5a4fd4;
   border-radius: 14px 14px 14px 4px;
+  
 }
 
 
@@ -1397,6 +1416,9 @@ position: fixed;
 .comment-section {
   display: flex;
   flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+  padding: 12px;
   gap: 12px;
   border-top: 1px solid var(--border);
   padding-top: 14px;
@@ -1468,9 +1490,41 @@ position: fixed;
 }
 
 .comment-content {
+  word-break: break-word;
   font-size: 13px;
   color: var(--color-text-secondary);
   line-height: 1.5;
   margin: 0;
   padding-left: 41px; /* aligns with text after avatar */
+}
+
+.comment-list {
+  flex: 1;        
+  overflow-y: auto;      
+  margin-bottom: 10px
+}
+
+.post-content {
+  padding: 16px;
+  border-bottom: 1px solid #eee;
+  flex-shrink: 0;          
+}
+
+.time {
+  position: absolute;
+  bottom: 6px;
+  right: 8px;
+  font-size: 11px;
+  color: #999;
+  white-space: nowrap;
+}
+
+
+.spacer {
+  display: inline-block;
+  width: 45px; /* same width as time */
+}
+
+.new-message{
+  word-break: break-word;
 }

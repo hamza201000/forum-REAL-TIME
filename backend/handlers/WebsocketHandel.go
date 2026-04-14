@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"sync"
+	"time"
 
 	"backend/models"
 	"backend/services"
@@ -87,9 +88,7 @@ func WsHandle(svc *services.UserService) http.HandlerFunc {
 				return
 			}
 			var m models.DataMessage
-
 			json.Unmarshal(message, &m)
-
 			if m.Type == "online_users" {
 				broadcastOnlineUsers(session.UserID)
 				continue
@@ -102,6 +101,7 @@ func WsHandle(svc *services.UserService) http.HandlerFunc {
 			} else if m.Type == "MsgtoReceiver" || m.Type == "MsgtoSender" {
 				m.Sender_id = session.UserID
 				m.Username_sender = session.Username
+				m.CreatedAt = time.Now().UTC().Format(time.RFC3339)
 				MessageId, err := svc.Repo.InsertMessage(m)
 				if err != nil {
 					fmt.Println("Error inserting message:", err)
@@ -110,7 +110,7 @@ func WsHandle(svc *services.UserService) http.HandlerFunc {
 				m.Id = MessageId
 				fmt.Println("Message ID:", MessageId)
 			}
-			
+
 			dataMessageToReceiver, err := json.Marshal(m)
 			if err != nil {
 				fmt.Println(err)
@@ -179,9 +179,7 @@ func broadcastOnlineUsers(userSession int) {
 	mu.RLock()
 	var userIds []int
 	for userId := range clients {
-		
 		userIds = append(userIds, userId)
-		
 	}
 	connsSnapshot := make(map[int][]*websocket.Conn, len(clients))
 	for k, v := range clients {
@@ -190,7 +188,7 @@ func broadcastOnlineUsers(userSession int) {
 	mu.RUnlock()
 	fmt.Println(connsSnapshot)
 	msg := map[string]interface{}{
-		"type": "online_users",
+		"type":     "online_users",
 		"user_ids": userIds,
 	}
 	data, _ := json.Marshal(msg)
@@ -203,4 +201,3 @@ func broadcastOnlineUsers(userSession int) {
 		}
 	}
 }
-

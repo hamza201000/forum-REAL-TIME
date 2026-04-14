@@ -40,7 +40,7 @@ type Post struct {
 	Category  string    `json:"category"`
 	AllLikes  int       `json:"allLikes"`
 	LikeUsr int       `json:"like_usr"`
-	CreatedAt time.Time `json:"created_at"`
+	CreatedAt string `json:"created_at"`
 }
 
 type Client struct {
@@ -58,7 +58,7 @@ type DataMessage struct {
 	Receiver_id     int       `json:"Receiver_id"`
 	Message         string    `json:"Message"`
 	Seen            int       `json:"Seen"`
-	CreatedAt       time.Time `json:"created_at"`
+	CreatedAt       string `json:"created_at"`
 	Token           string    `json:"token"`
 }
 

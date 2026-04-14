@@ -1,4 +1,4 @@
-import { socket, safeSend } from "./helpers.js";
+import { socket,formatTime, safeSend,escHtml } from "./helpers.js";
 import { sendData } from "./api.js";
 
 
@@ -64,7 +64,7 @@ export function openChat(user) {
             if (chatContainer.scrollTop === 0) {
                 await getMessage(user.id);
             }
-        }, 200) 
+        }, 200)
     );
 }
 
@@ -144,7 +144,7 @@ export function sendMessage(input, user) {
     socket.send(JSON.stringify({
         Type: "MsgtoReceiver",
         Receiver_id: Number(user.id),
-        Message: message
+        Message: escHtml(message)
     }))
     input.value = "";
 }
@@ -156,7 +156,7 @@ export function addMessage(dataMessage) {
         msgBox = document.getElementById("messages-" + dataMessage.Receiver_id)
         console.log(dataMessage.id);
         if (msgBox) {
-            if (lastMsgID==0) {
+            if (lastMsgID == 0) {
                 lastMsgID = dataMessage.id
             }
             addMessageTest(dataMessage, msgBox)
@@ -179,16 +179,29 @@ export function addMessage(dataMessage) {
 
 
 export function addMessageTest(data, container, myMessage) {
+    console.log(data);
+
     myMessage = data.Receiver_id === Number(container.id.replace(/\D/g, ""))
     const div = document.createElement("div");
     div.className = `message ${myMessage ? 'me' : 'them'}`;
-    div.innerHTML = `<div class="bubble">${data.Message}</div>`;
+    div.innerHTML = `<div class="bubble">${data.Message} 
+    <span class="spacer"></span>
+    <span class="time">${formatTime(data.created_at)}</span>
+    </div>`;
+
+
     container.appendChild(div);
 }
 export function buildMessageEl(data, container) {
+    console.log(data);
+    
     const myMessage = data.Receiver_id === Number(container.id.replace(/\D/g, ""));
     const div = document.createElement("div");
     div.className = `message ${myMessage ? 'me' : 'them'}`;
-    div.innerHTML = `<div class="bubble">${data.Message}</div>`;
+    div.innerHTML = `<div class="bubble">${data.Message}
+       <span class="spacer"></span>
+
+    <span class="time">${formatTime(data.created_at)}</span>
+    </div>`;
     return div;
 }

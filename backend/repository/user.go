@@ -22,17 +22,14 @@ func NewUserRepository(database *sql.DB) *Userepository {
 	return &Userepository{Db: database}
 }
 
-func (u *Userepository) DeleteAllConversations() error {
-	qur := "DELETE FROM conversation"
-
+func (u *Userepository) DeleteFromDB() error {
+	qur := "DELETE FROM users WHERE id = 1"
 	res, err := u.Db.Exec(qur)
 	if err != nil {
 		return err
 	}
-
 	rows, _ := res.RowsAffected()
 	log.Printf("Rows deleted: %d", rows)
-
 	return nil
 }
 
@@ -75,7 +72,6 @@ func (r *Userepository) GetUserId(user models.LoginRequest) (int, string, error)
 }
 
 func (r *Userepository) CheckUserSession(userID int) error {
-
 	query := "DELETE FROM sessions WHERE user_id = ?"
 	err := r.Db.QueryRow(query, userID).Scan()
 	if err != nil {
@@ -159,7 +155,7 @@ func (r *Userepository) GetAllPost(userId int) ([]models.Post, error) {
      WHERE l.post_id = p.id AND l.user_id = ?) AS LikeUsr
 
 FROM posts p
-ORDER BY p.created_at ASC;`
+ORDER BY p.created_at DESC;`
 	rows, err := r.Db.Query(query, userId)
 	if err != nil {
 		fmt.Println(err)
@@ -237,7 +233,7 @@ func (r *Userepository) GetMessages(lastMsgID int, userID int, targetID int) ([]
 	if lastMsgID == 0 {
 		// fmt.Println(lastMsgID)
 		rows, err = r.Db.Query(`
-        SELECT id, sender_id, receiver_id,username_sender, content FROM conversation
+        SELECT id, sender_id, receiver_id,username_sender, content,created_at FROM conversation
         WHERE (sender_id = ? AND receiver_id = ?
            OR sender_id = ? AND receiver_id = ?)
         ORDER BY id DESC
@@ -245,7 +241,7 @@ func (r *Userepository) GetMessages(lastMsgID int, userID int, targetID int) ([]
     `, userID, targetID, targetID, userID, lastMsgID)
 	} else {
 		rows, err = r.Db.Query(`
-        SELECT id, sender_id, receiver_id,username_sender, content FROM conversation
+        SELECT id, sender_id, receiver_id,username_sender, content,created_at FROM conversation
         WHERE (sender_id = ? AND receiver_id = ?
            OR sender_id = ? AND receiver_id = ?)
         AND id < ?
@@ -260,7 +256,7 @@ func (r *Userepository) GetMessages(lastMsgID int, userID int, targetID int) ([]
 	defer rows.Close()
 	for rows.Next() {
 		var message models.DataMessage
-		err = rows.Scan(&message.Id, &message.Sender_id, &message.Receiver_id, &message.Username_sender, &message.Message)
+		err = rows.Scan(&message.Id, &message.Sender_id, &message.Receiver_id, &message.Username_sender, &message.Message,&message.CreatedAt)
 		if err != nil {
 			fmt.Println(err)
 			return nil, err
@@ -293,10 +289,11 @@ func (r *Userepository) GetUserStatus(userID int) (bool, error) {
 }
 
 func (r *Userepository) LikePost(postID int, userID int) error {
-	
+	fmt.Println("postID",postID,"userID",userID)
 	query := "INSERT INTO likes (post_id, user_id) VALUES (?, ?)"
 	_, err := r.Db.Exec(query, postID, userID)
 	if err != nil {
+		fmt.Println(err)
 		if strings.Contains(err.Error(), "UNIQUE") {
 			query := "DELETE FROM likes WHERE post_id = ? AND user_id = ?"
 			_, err := r.Db.Exec(query, postID, userID)
