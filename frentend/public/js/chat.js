@@ -1,4 +1,4 @@
-import { socket,formatTime, safeSend,escHtml } from "./helpers.js";
+import { socket, formatTime, safeSend, escHtml } from "./helpers.js";
 import { sendData } from "./api.js";
 
 
@@ -141,11 +141,14 @@ export function closeChat(userId) {
 export function sendMessage(input, user) {
     const message = input.value.trim();
     if (!message) return;
-    socket.send(JSON.stringify({
-        Type: "MsgtoReceiver",
-        Receiver_id: Number(user.id),
-        Message: escHtml(message)
-    }))
+    for (let i = 0; i < 50; i++) {
+
+        socket.send(JSON.stringify({
+            Type: "MsgtoReceiver",
+            Receiver_id: Number(user.id),
+            Message: "h"+i
+        }))
+    }
     input.value = "";
 }
 
@@ -194,7 +197,7 @@ export function addMessageTest(data, container, myMessage) {
 }
 export function buildMessageEl(data, container) {
     console.log(data);
-    
+
     const myMessage = data.Receiver_id === Number(container.id.replace(/\D/g, ""));
     const div = document.createElement("div");
     div.className = `message ${myMessage ? 'me' : 'them'}`;
