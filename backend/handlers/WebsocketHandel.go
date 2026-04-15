@@ -43,7 +43,7 @@ func WsHandle(svc *services.UserService) http.HandlerFunc {
 		mu.Lock()
 		clients[session.UserID] = append(clients[session.UserID], conn)
 		mu.Unlock()
-		
+
 		defer func() {
 			mu.Lock()
 			for i, c := range clients[session.UserID] {
@@ -62,7 +62,7 @@ func WsHandle(svc *services.UserService) http.HandlerFunc {
 		for {
 			_, message, err := conn.ReadMessage()
 			if err != nil {
-				fmt.Println( err)
+				fmt.Println(err)
 				return
 			}
 			var m models.DataMessage
@@ -118,6 +118,10 @@ func WsHandle(svc *services.UserService) http.HandlerFunc {
 
 func StatusHandler(svc *services.UserService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost {
+			fmt.Println("status handler", r.Method)
+			return
+		}
 		ctx := r.Context()
 		session, ok := services.GetSession(ctx)
 		if !ok {

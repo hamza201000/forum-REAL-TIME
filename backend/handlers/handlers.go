@@ -15,6 +15,10 @@ import (
 
 func HomeHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost {
+			fmt.Println("home handler", r.Method)
+			return
+		}
 		content, err := os.ReadFile("../frentend/public/index.html")
 		if err != nil {
 			http.Error(w, "Not found", http.StatusNotFound)
@@ -34,7 +38,7 @@ func RegisterHandler(svc *services.UserService) http.HandlerFunc {
 			fmt.Println(err)
 			return
 		}
-		
+
 		err = svc.RegisterUser(data)
 		if err != nil {
 			fmt.Println(err)
@@ -227,8 +231,6 @@ func LikeHandler(svc *services.UserService) http.HandlerFunc {
 			return
 		}
 		services.SenData(w, "message", "Like created successfully", http.StatusOK)
-
-		
 	}
 }
 
@@ -263,14 +265,14 @@ func GetCommentsHandler(svc *services.UserService) http.HandlerFunc {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
-	postIDStr := r.URL.Query().Get("postId")
+		postIDStr := r.URL.Query().Get("postId")
 		postID, err := strconv.Atoi(postIDStr)
 		if err != nil {
 			fmt.Println("err of atoi", err)
 			http.Error(w, "Bad Request", http.StatusBadRequest)
 			return
 		}
-				comments, err := svc.Repo.GetComments(postID)
+		comments, err := svc.Repo.GetComments(postID)
 		if err != nil {
 			fmt.Println("err of data base", err)
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)

@@ -3,6 +3,7 @@ package services
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"golang.org/x/crypto/bcrypt"
 
@@ -19,6 +20,12 @@ func NewUserService(repo *repository.Userepository) *UserService {
 }
 
 func (s *UserService) RegisterUser(user models.User) error {
+	user.Firstname = strings.TrimSpace(user.Firstname)
+	user.Lastname = strings.TrimSpace(user.Lastname)
+	user.Nickname = strings.TrimSpace(user.Nickname)
+	user.Age = strings.TrimSpace(user.Age)
+	user.Email = strings.TrimSpace(user.Email)
+	user.Password = strings.TrimSpace(user.Password)
 	if user.Firstname == "" || user.Lastname == "" || user.Nickname == "" ||
 		user.Age == "" || user.Gender == "" || user.Email == "" || user.Password == "" {
 		return errors.New("missing required fields")
