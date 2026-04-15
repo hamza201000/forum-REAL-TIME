@@ -50,12 +50,10 @@ func (s *UserService) LoginUser(data models.LoginRequest) (int, string, error) {
 }
 
 func (s *UserService) CheckDataPost(post models.Post) error {
-fmt.Println("post", post)
 	if post.Title == "" || post.Content == "" || post.Category == "" {
 		return errors.New("missing required fields")
 	}
 	if !Checkcategory(post.Category) {
-		fmt.Println("Invalid category:", post.Category)
 		return errors.New("invalid category")
 	}
 	if len(post.Title) > 100 {

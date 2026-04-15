@@ -1,7 +1,6 @@
 import { createRegister } from "./pageRegister.js";
 import { createLogin } from "./pageLogin.js";
 import { createFeedPage } from "./pagePost.js";
-import { connectSocket } from "./helpers.js";
 const publicPages = ['/login', '/register']
 
 const authChannel = new BroadcastChannel('auth_sync');

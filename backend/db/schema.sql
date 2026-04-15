@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS users (
     age INTEGER NOT NULL,
     firstname TEXT NOT NULL,
     lastname TEXT NOT NULL,
-    -- is_online INTEGER DEFAULT 0,
+    
     created_at TEXT DEFAULT (datetime('now'))
 );
 

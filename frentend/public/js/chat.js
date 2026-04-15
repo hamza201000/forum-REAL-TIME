@@ -1,4 +1,4 @@
-import { socket, formatTime, safeSend, escHtml } from "./helpers.js";
+import { socket, formatDate } from "./helpers.js";
 import { sendData } from "./api.js";
 
 
@@ -35,6 +35,8 @@ export function openChat(user) {
   `;
     container.appendChild(chatBox);
 
+    isLoading = false;
+    lastMsgID = 0;
     getMessage(user.id)
 
     const input = chatBox.querySelector(".chat-input")
@@ -54,13 +56,10 @@ export function openChat(user) {
     const chatContainer = document.getElementById(`messages-${user.id}`);
     chatContainer.innerHTML = "";
 
-    console.log("isloading", isLoading, lastMsgID);
-    isLoading = false;
-    lastMsgID = 0;
     chatContainer.addEventListener(
         "scroll",
         debounce(async () => {
-            console.log("ok", lastMsgID);
+            ("ok", lastMsgID);
             if (chatContainer.scrollTop === 0) {
                 await getMessage(user.id);
             }
@@ -70,13 +69,8 @@ export function openChat(user) {
 
 
 export async function getMessage(User_id) {
-
     if (isLoading) return;
-
     isLoading = true;
-
-
-
     const dataMessage = await sendData(
         {
             lastMsgID: lastMsgID,
@@ -90,10 +84,9 @@ export async function getMessage(User_id) {
         return;
     }
     const container = document.getElementById(`messages-${User_id}`);
-
     const oldHeight = container.scrollHeight;
     dataMessage.allmessages.forEach((data) => {
-        const div = buildMessageEl(data, container);
+        const div = buildMessage(data, Number(container.id.replace(/\D/g, "")))
         container.prepend(div); // prepend, don't append
     });
     if (lastMsgID == 0) {
@@ -118,17 +111,6 @@ export function debounce(func, delay) {
     };
 }
 
-async function loadMessages(user_id) {
-    if (isLoading) return;
-    isLoading = true
-    await sendData(
-        Number(user_id),
-        "/api/getMessages",
-        "POST"
-    );
-    isLoading = false;
-}
-
 export function closeChat(userId) {
     const chat = document.getElementById("chat-" + userId);
     if (chat) {
@@ -141,14 +123,13 @@ export function closeChat(userId) {
 export function sendMessage(input, user) {
     const message = input.value.trim();
     if (!message) return;
-    for (let i = 0; i < 50; i++) {
 
-        socket.send(JSON.stringify({
-            Type: "MsgtoReceiver",
-            Receiver_id: Number(user.id),
-            Message: "h"+i
-        }))
-    }
+
+    socket.send(JSON.stringify({
+        Type: "MsgtoReceiver",
+        Receiver_id: Number(user.id),
+        Message: message
+    }))
     input.value = "";
 }
 
@@ -157,54 +138,36 @@ export function addMessage(dataMessage) {
     let msgBox = null
     if (dataMessage.type === "MsgtoSender") {
         msgBox = document.getElementById("messages-" + dataMessage.Receiver_id)
-        console.log(dataMessage.id);
         if (msgBox) {
             if (lastMsgID == 0) {
                 lastMsgID = dataMessage.id
             }
-            addMessageTest(dataMessage, msgBox)
+            msgBox.appendChild(buildMessage(dataMessage, Number(msgBox.id.replace(/\D/g, ""))))
         }
     } else if (dataMessage.type === "MsgtoReceiver") {
         msgBox = document.getElementById("messages-" + dataMessage.Sender_id)
         if (msgBox) {
-            addMessageTest(dataMessage, msgBox)
+            msgBox.appendChild(buildMessage(dataMessage, Number(msgBox.id.replace(/\D/g, ""))))
         }
     }
     if (msgBox) {
-        const isAtBottom = msgBox.scrollHeight - msgBox.scrollTop <= msgBox.clientHeight + 50
+        const isAtBottom = msgBox.scrollHeight - msgBox.scrollTop <= msgBox.clientHeight + 60
+        if (dataMessage.type == "MsgtoReceiver") {
+
+            console.log(isAtBottom);
+        }
         if ((dataMessage.type === "MsgtoSender") || (dataMessage.type == "MsgtoReceiver" && isAtBottom)) {
-            console.log(msgBox);
             msgBox.scrollTop = msgBox.scrollHeight;
         }
     }
 }
 
-
-
-export function addMessageTest(data, container, myMessage) {
-    console.log(data);
-
-    myMessage = data.Receiver_id === Number(container.id.replace(/\D/g, ""))
-    const div = document.createElement("div");
-    div.className = `message ${myMessage ? 'me' : 'them'}`;
-    div.innerHTML = `<div class="bubble">${data.Message} 
-    <span class="spacer"></span>
-    <span class="time">${formatTime(data.created_at)}</span>
-    </div>`;
-
-
-    container.appendChild(div);
-}
-export function buildMessageEl(data, container) {
-    console.log(data);
-
-    const myMessage = data.Receiver_id === Number(container.id.replace(/\D/g, ""));
+export function buildMessage(data, myMessage) {
     const div = document.createElement("div");
     div.className = `message ${myMessage ? 'me' : 'them'}`;
     div.innerHTML = `<div class="bubble">${data.Message}
        <span class="spacer"></span>
-
-    <span class="time">${formatTime(data.created_at)}</span>
+    <span class="time">${formatDate(data.created_at)}</span>
     </div>`;
     return div;
 }

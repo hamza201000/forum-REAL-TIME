@@ -2,10 +2,11 @@
 import { sendData } from "./api.js";
 import { renderContacts } from "./renderContacts.js";
 import { addMessage, openChat } from "./chat.js";
-import { escHtml, formatTime, safeSend } from "./helpers.js";
+import { escHtml, formatDate, safeSend } from "./helpers.js";
 import { connectSocket, socket } from "./helpers.js";
 import { updateOnlineCount, updatenewMsg, updateOnlineUsers, renderCount } from "./renderContacts.js";
 import { navigateTo } from "./router.js"
+import { showError } from "./validation.js";
 
 export async function createFeedPage(data) {
   connectSocket()
@@ -13,10 +14,10 @@ export async function createFeedPage(data) {
   const user = data || "User";
   const avatar = (user || "U")[0].toUpperCase();
 
-  console.log(localStorage.getItem("session_token"));
+  (localStorage.getItem("session_token"));
 
   app.innerHTML = `
-    <!-- ══ NAVBAR ══ -->
+  
     <nav class="navbar">
       <span class="navbar-brand" id="nav-home">Forum</span>
       <div class="navbar-actions">
@@ -35,10 +36,8 @@ export async function createFeedPage(data) {
       </div>
     </nav>
 
-    <!-- ══ LAYOUT ══ -->
+  
     <div class="layout">
-
-      <!-- LEFT: Contacts / Online bar -->
       <aside class="left-bar" id="left-bar">
         <div class="right-bar-header">
           <span class="right-bar-title">Contacts</span>
@@ -53,10 +52,8 @@ export async function createFeedPage(data) {
         </div>
       </aside>
 
-      <!-- Sidebar overlay (mobile) -->
       <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
-      <!-- CENTER: Feed -->
       <main class="feed-wrapper">
         <div class="feed-inner" id="feed-list"></div>
       </main>
@@ -64,9 +61,8 @@ export async function createFeedPage(data) {
       
       
 
-    </div><!-- end .layout -->
+    </div>
 
-    <!-- FAB -->
     <button class="fab" id="fab-btn" title="Create post">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -75,7 +71,6 @@ export async function createFeedPage(data) {
       </svg>
     </button>
 
-    <!-- Modal -->
     <div class="modal-overlay" id="modal-overlay">
       <div class="modal-card" id="modal-card">
         <div class="modal-header">
@@ -166,11 +161,11 @@ export async function createFeedPage(data) {
   socket.onmessage = (event) => {
     const data = JSON.parse(event.data)
     if (data.type === "online_users") {
-      console.log(data);
+      (data);
       const userContacts = document.querySelectorAll(".contact-item")
       updateOnlineUsers(userContacts, data.user_ids)
     } else if (data.type === "MsgtoReceiver" || data.type === "MsgtoSender") {
-      console.log("data", data);
+      ("data", data);
       addMessage(data)
       users.forEach(u => {
         // Update last message for relevant users
@@ -205,14 +200,14 @@ export async function createFeedPage(data) {
 
 async function renderFeed() {
   const list = document.getElementById("feed-list");
-  (list);
+  
 
   list.innerHTML = `<div class="feed-empty"><p>Loading…</p></div>`;
 
   try {
     const res = await sendData({}, "/api/getPosts", "GET");
     const posts = res?.allpost ?? [];
-    console.log(posts);
+    (posts);
 
     if (posts.length === 0) {
       list.innerHTML = `
@@ -227,7 +222,7 @@ async function renderFeed() {
 
       const initial = (p.username || "U")[0].toUpperCase();
       const liked = p.likedBy?.includes(user.username);
-      console.log(p.created_at);
+      (p.created_at);
 
       return `
           <article class="post-card"  id = "post-${p.id}">
@@ -236,7 +231,7 @@ async function renderFeed() {
                 <div class="post-avatar">${initial}</div>
                 <div>
                   <span class="post-username">${escHtml(p.username || "Unknown")}</span>
-                  <span class="post-time">${formatTime(p.created_at)}</span>                
+                  <span class="post-time">Created At ${formatDate(p.created_at)}</span>                
                   </div>
               </div>
             </div>
@@ -285,12 +280,11 @@ document.addEventListener("click", async (e) => {
   if (!btn) return
   const postId = btn.dataset.postid;
   try {
-    console.log("Liking post", postId);
+    
     await sendData({ postId: Number(postId) }, "/api/like", "POST");
-    // renderFeed(); /* re-fetch to get accurate server state */
-    let i = 0
+  
     document.querySelectorAll(".likenmb-" + postId).forEach(like => {
-      i++
+      
 
 
       if (like.style.color === "red") {
@@ -301,7 +295,7 @@ document.addEventListener("click", async (e) => {
       like.style.color = "red";
       like.textContent = parseInt(like.textContent) + 1 + " Likes";
     })
-    console.log("i=", i);
+    
   } catch (err) {
     console.error("Like failed:", err);
   }
@@ -309,7 +303,7 @@ document.addEventListener("click", async (e) => {
 
 function openModal(element) {
   element.classList.add("active");
-  // document.getElementById("modal-title").focus();
+  document.getElementById("modal-title").focus();
 }
 
 function closeModal(element) {
@@ -340,6 +334,8 @@ document.body.addEventListener("click", (e) => {
   };
   if (document.getElementById("chat-" + user.id)) return;
   document.getElementById("chat-container").innerHTML = ""
+  console.log("open");
+  
   openChat(user);
   contactItem.style.backgroundColor = ""
   safeSend({
@@ -353,7 +349,6 @@ document.body.addEventListener("click", (e) => {
 
 document.addEventListener("click", async (e) => {
 
-  // open popup
   const commentBtn = e.target.closest(".comment-icon-btn") || e.target.closest(".post-face");
   const isactv = document.getElementById("post-popup")
   if (commentBtn) {
@@ -362,19 +357,13 @@ document.addEventListener("click", async (e) => {
     if (isactv && isactv.classList.contains("active")) {
       return
     }
-    // isactv.innerHTML=openPopup(post.innerHTML, postId)
     isactv.innerHTML=openPopup(post.innerHTML, postId)
     isactv.classList.add("active");
-    // remove old modal if exists
-    // document.querySelector(".modal-overlay")?.remove();
+    
     await refreshComments(postId)
 
-    // document.body.insertAdjacentHTML("beforeend", openPopup(post.innerHTML, postId));
     return;
   }
-
-  // close modal when clicking the overlay background
-  // const overlay = e.target.closest(".modal-overlay");
   if (e.target === isactv) {
     isactv.classList.remove("active");
     isactv.innerHTML = ""
@@ -394,12 +383,7 @@ document.addEventListener("click", async (e) => {
         input.value = "";
         input.style.height = "auto";
       })
-      .catch(err => {
-        console.error("Failed to post comment:", err);
-      })
-      .finally(() => {
-        sendBtn.disabled = false;
-      });
+
     const commList = document.getElementById("comment-list-" + postId)
     if (!commList) return
     await refreshComments(postId)
@@ -442,9 +426,6 @@ async function refreshComments(postId) {
   try {
     const res = await sendData({}, `/api/getComments?postId=${postId}`, "GET");
     const comments = res?.comments || [];
-    console.log(comments);
-    console.log(postId);
-
     const commentList = comments.map(c => `
           <div class="comment-item">
             <div class="comment-header">
@@ -464,7 +445,8 @@ async function refreshComments(postId) {
 
   } catch (err) {
     console.error("Failed to refresh comments:", err);
-    commentList.innerHTML = `<p style="color:red;text-align:center">Failed to load comments.</p>`;
+    // showError("Failed to load comments.",commentListContainer)
+    commentListContainer.innerHTML = `<p style="color:red;text-align:center">Failed to load comments.</p>`;
   }
 }
 

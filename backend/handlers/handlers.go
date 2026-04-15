@@ -34,7 +34,7 @@ func RegisterHandler(svc *services.UserService) http.HandlerFunc {
 			fmt.Println(err)
 			return
 		}
-		fmt.Println(data)
+		
 		err = svc.RegisterUser(data)
 		if err != nil {
 			fmt.Println(err)
@@ -163,7 +163,6 @@ func GetPost(svc *services.UserService) http.Handler {
 			services.SenData(w, "message", "Intarnal server error", http.StatusInternalServerError)
 			return
 		}
-		fmt.Println(posts)
 		services.SenData(w, "allpost", posts, http.StatusOK)
 	})
 }
@@ -187,7 +186,6 @@ func GetAllUsers(svc *services.UserService) http.Handler {
 func GetMessages(svc *services.UserService) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var msg models.Loadmsg
-
 		err := json.NewDecoder(r.Body).Decode(&msg)
 		if err != nil {
 			fmt.Println(err)
@@ -197,7 +195,6 @@ func GetMessages(svc *services.UserService) http.Handler {
 		ctx := r.Context()
 		session, ok := services.GetSession(ctx)
 		if !ok {
-			fmt.Println("session", ok)
 			return
 		}
 		AllMessages, err := svc.Repo.GetMessages(msg.LastMsg, session.UserID, msg.UserID)
@@ -205,7 +202,6 @@ func GetMessages(svc *services.UserService) http.Handler {
 			fmt.Println(err)
 			return
 		}
-		fmt.Println((AllMessages))
 		services.SenData(w, "allmessages", AllMessages, http.StatusOK)
 	})
 }
@@ -217,7 +213,6 @@ func LikeHandler(svc *services.UserService) http.HandlerFunc {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
-		fmt.Println("session", session)
 		var likeData models.Like
 		err := json.NewDecoder(r.Body).Decode(&likeData)
 		if err != nil {
@@ -225,14 +220,15 @@ func LikeHandler(svc *services.UserService) http.HandlerFunc {
 			http.Error(w, "Bad Request", http.StatusBadRequest)
 			return
 		}
-		fmt.Println("likeData", likeData)
 		err = svc.Repo.LikePost(likeData.PostID, session.UserID)
 		if err != nil {
 			fmt.Println(err)
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			return
 		}
-		w.WriteHeader(http.StatusOK)
+		services.SenData(w, "message", "Like created successfully", http.StatusOK)
+
+		
 	}
 }
 
@@ -243,7 +239,6 @@ func CommentHandler(svc *services.UserService) http.HandlerFunc {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
-		fmt.Println("session", session)
 		var commentData models.Comment
 		err := json.NewDecoder(r.Body).Decode(&commentData)
 		if err != nil {
@@ -251,34 +246,31 @@ func CommentHandler(svc *services.UserService) http.HandlerFunc {
 			http.Error(w, "Bad Request", http.StatusBadRequest)
 			return
 		}
-		fmt.Println("commentData", commentData.PostID)
 		err = svc.Repo.AddComment(commentData.PostID, session.UserID, session.Username, commentData.Content)
 		if err != nil {
 			fmt.Println(err)
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			return
 		}
-		w.WriteHeader(http.StatusOK)
+		services.SenData(w, "message", "Comment created successfully", http.StatusOK)
 	}
 }
 
 func GetCommentsHandler(svc *services.UserService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		session, ok := services.GetSession(r.Context())
+		_, ok := services.GetSession(r.Context())
 		if !ok {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
-		fmt.Println("session", session)
-		postIDStr := r.URL.Query().Get("postId")
+	postIDStr := r.URL.Query().Get("postId")
 		postID, err := strconv.Atoi(postIDStr)
 		if err != nil {
 			fmt.Println("err of atoi", err)
 			http.Error(w, "Bad Request", http.StatusBadRequest)
 			return
 		}
-		fmt.Println("postID", postID)
-		comments, err := svc.Repo.GetComments(postID)
+				comments, err := svc.Repo.GetComments(postID)
 		if err != nil {
 			fmt.Println("err of data base", err)
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)

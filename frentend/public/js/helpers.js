@@ -6,9 +6,7 @@ const messageQueue = []
 
 export function connectSocket() {
   socket = new WebSocket("ws://localhost:8080/api/ws");
-
   socket.onopen = () => {
-    // Flush any queued messages
     messageQueue.forEach(msg => socket.send(msg))
     messageQueue.length = 0
   }
@@ -19,10 +17,9 @@ export function safeSend(data) {
   if (socket.readyState === WebSocket.OPEN) {
     socket.send(msg)
   } else {
-    messageQueue.push(msg)  // queue it until connection opens
+    messageQueue.push(msg)
   }
 }
-/* ── Helpers ── */
 export function escHtml(str = "") {
   return str
     .replace(/&/g, "&amp;")
@@ -30,18 +27,12 @@ export function escHtml(str = "") {
     .replace(/>/g, "&gt;");
 }
 
-export function formatTime(sqliteDate) {
-  
-  const date = new Date(sqliteDate.replace(" ", "T") );
-  const diff = Date.now() - date.getTime();
-  console.log(diff);
-  const minutes = Math.floor(diff / 60000);
-  if (minutes < 1) return "Just now";
-  if (minutes < 60) return `${minutes}m ago`;
-
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-
-  const days = Math.floor(hours / 24);
-  return `${days}d ago`;
+export function formatDate(dateString) {
+  const date = new Date(dateString);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  return `${year}-${month}-${day} ${hours}:${minutes}`;
 }

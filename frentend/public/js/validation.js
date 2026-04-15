@@ -1,3 +1,6 @@
+
+
+
 export function showError(message, element) {
     const Field = document.querySelector(element);
     const p = document.createElement("p");
@@ -10,6 +13,8 @@ export function validateEmail(email) {
     const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     return regex.test(email);
 }
+
+
 
 export function checkUser(type, user) {
     document.querySelectorAll(".invalid").forEach(el => el.remove());
@@ -39,22 +44,18 @@ export function checkUser(type, user) {
             showError("You must be at least 18 years old", ".Age");
             return false;
         }
-
         if (!user.nickname) {
             showError("Nickname is required", ".Nickname");
             return false;
         }
-
         if (!user.email) {
             showError("Email is required", ".Email");
             return false;
         }
-
         if (!validateEmail(user.email)) {
             showError("Email is not valid", ".Email");
             return false;
         }
-
         if (!user.password) {
             showError("Password is required", ".Password");
             return false;

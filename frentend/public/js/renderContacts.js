@@ -15,9 +15,7 @@ export async function renderContacts() {
     console.error("Failed to load contacts:", err);
   }
 }
-//CONTACTS — fetch online users from API
 export function renderCount(users) {
-
   users.sort((u1, u2) => {
     if (u1.LastMsg == null && u2.LastMsg == null) {
       return 0
@@ -30,16 +28,13 @@ export function renderCount(users) {
     }
     return u1.LastMsg.id > u2.LastMsg.id ? -1 : 1; // Online users first
   });
-  // console.log(users);
   const allcontacts = document.getElementById("online-contacts")
   const divs = [...allcontacts.querySelectorAll('.contact-item')];
-  console.log(divs);
-  console.log(allcontacts);
+  (divs);
+  (allcontacts);
   if (allcontacts) {
     allcontacts.innerHTML = users.map(contactRow).join("")
   }
-
-
 }
 
 function contactRow(u) {
@@ -47,12 +42,9 @@ function contactRow(u) {
   const chatBox = document.querySelector(".chat-box")
   const hasNewMsg = !chatBox && u.LastMsg && u.LastMsg.Seen == 0 && u.LastMsg.Sender_id == u.User_id
   let itnkmymsg = null
-
   if (u.LastMsg) {
     itnkmymsg = u.LastMsg.Sender_id != u.User_id ? "you: " + u.LastMsg.Message : u.LastMsg.Username_sender + ": " + u.LastMsg.Message;
   }
-
-
   return `
         <div class="contact-item" id=${u.User_id} style=${hasNewMsg ? "background-color:red" : ""}>
           <div class="contact-avatar-wrap">
@@ -70,8 +62,6 @@ function contactRow(u) {
       : ""}
         </div>`;
 }
-
-
 export function updateOnlineUsers(userContacts, allUsersIds) {
   if (allUsersIds && allUsersIds.length !== 0) {
     document.getElementById("online-count").textContent = allUsersIds.length - 1 + " online"
@@ -100,12 +90,10 @@ export function updateOnlineUsers(userContacts, allUsersIds) {
 
 
 export function updatenewMsg(dataMessage) {
-  console.log("dataMessage", dataMessage)
   let contactUser = null
   if (dataMessage.type == "MsgtoReceiver") {
     contactUser = document.getElementById("" + dataMessage.Sender_id)
     const chatBox = document.getElementById("chat-" + dataMessage.Sender_id)
-    console.log(chatBox);
     const newMsg = contactUser.querySelector(".new-message")
     newMsg.innerHTML = `<span>${dataMessage.Username_sender + ": " + dataMessage.Message}</span>`
     if (!chatBox) {
@@ -113,7 +101,6 @@ export function updatenewMsg(dataMessage) {
     }
   } else if (dataMessage.type == "MsgtoSender") {
     contactUser = document.getElementById("" + dataMessage.Receiver_id)
-    console.log(contactUser);
     const newMsg = contactUser.querySelector(".new-message")
     newMsg.innerHTML = `<span>${"you:" + dataMessage.Message}</span>`
     contactUser.style.backgroundColor = ""
@@ -121,12 +108,7 @@ export function updatenewMsg(dataMessage) {
 }
 
 
-
-
-
-
 export function updateOnlineCount(users) {
-
   users.sort((u1, u2) => {
     if (u1.LastMsg == null && u2.LastMsg == null) {
       return 0
@@ -137,12 +119,10 @@ export function updateOnlineCount(users) {
     if (u2.LastMsg == null) {
       return -1
     }
-    return u1.LastMsg.id > u2.LastMsg.id ? -1 : 1; // Online users first
+    return u1.LastMsg.id > u2.LastMsg.id ? -1 : 1; 
   });
-  console.log(users);
   const allcontacts = document.getElementById("online-contacts")
   const divs = [...document.querySelectorAll('.contact-item')];
-  console.log(divs);
   divs.sort((d1, d2) => {
     const u1 = users.find(u => u.User_id == d1.id)
     const u2 = users.find(u => u.User_id == d2.id)
@@ -155,11 +135,9 @@ export function updateOnlineCount(users) {
     if (u2.LastMsg == null) {
       return -1
     }
-    return u1.LastMsg.id > u2.LastMsg.id ? -1 : 1; // Online users first
+    return u1.LastMsg.id > u2.LastMsg.id ? -1 : 1;
   })
   divs.forEach(d => allcontacts.appendChild(d))
-
-
 }
 
 

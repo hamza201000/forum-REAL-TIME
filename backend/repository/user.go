@@ -127,7 +127,6 @@ func (r *Userepository) DeleteSession(token string) error {
 }
 
 func (r *Userepository) CreatePost(post models.Post) error {
-
 	query := "INSERT INTO posts (user_id,username, title, content, category) VALUES (?, ?, ?, ?, ?)"
 	_, err := r.Db.Exec(query, post.UserID, post.Username, post.Title, post.Content, post.Category)
 	if err != nil {
@@ -164,8 +163,8 @@ ORDER BY p.created_at DESC;`
 	defer rows.Close()
 	for rows.Next() {
 		var post models.Post
-		err = rows.Scan(&post.ID, &post.UserID, &post.Username, &post.Title, &post.Content, 
-			&post.Category,&post.CreatedAt, &post.AllLikes, &post.LikeUsr)
+		err = rows.Scan(&post.ID, &post.UserID, &post.Username, &post.Title, &post.Content,
+			&post.Category, &post.CreatedAt, &post.AllLikes, &post.LikeUsr)
 		if err != nil {
 			return nil, err
 		}
@@ -205,6 +204,7 @@ func (r *Userepository) GetAllUsers(userid int) ([]models.Client, error) {
 	}
 	return Users, nil
 }
+
 func (r *Userepository) InsertSeenMessage(ReciverID, SenderId int) error {
 	query := "UPDATE conversation SET seen = 1 WHERE receiver_id = ? AND sender_id = ?"
 	_, err := r.Db.Exec(query, ReciverID, SenderId)
@@ -229,9 +229,7 @@ func (r *Userepository) GetMessages(lastMsgID int, userID int, targetID int) ([]
 	var messages []models.DataMessage
 	var rows *sql.Rows
 	var err error
-	fmt.Println("lastMsgID", lastMsgID)
 	if lastMsgID == 0 {
-		// fmt.Println(lastMsgID)
 		rows, err = r.Db.Query(`
         SELECT id, sender_id, receiver_id,username_sender, content,created_at FROM conversation
         WHERE (sender_id = ? AND receiver_id = ?
@@ -256,7 +254,7 @@ func (r *Userepository) GetMessages(lastMsgID int, userID int, targetID int) ([]
 	defer rows.Close()
 	for rows.Next() {
 		var message models.DataMessage
-		err = rows.Scan(&message.Id, &message.Sender_id, &message.Receiver_id, &message.Username_sender, &message.Message,&message.CreatedAt)
+		err = rows.Scan(&message.Id, &message.Sender_id, &message.Receiver_id, &message.Username_sender, &message.Message, &message.CreatedAt)
 		if err != nil {
 			fmt.Println(err)
 			return nil, err
@@ -289,7 +287,7 @@ func (r *Userepository) GetUserStatus(userID int) (bool, error) {
 }
 
 func (r *Userepository) LikePost(postID int, userID int) error {
-	fmt.Println("postID",postID,"userID",userID)
+	
 	query := "INSERT INTO likes (post_id, user_id) VALUES (?, ?)"
 	_, err := r.Db.Exec(query, postID, userID)
 	if err != nil {
@@ -318,7 +316,6 @@ func (r *Userepository) AddComment(postID int, userID int, username string, cont
 
 func (r *Userepository) GetComments(postID int) ([]models.Comment, error) {
 	var comments []models.Comment
-	fmt.Println("postID in repo", postID)
 	query := "SELECT id, user_id, username, content, created_at FROM comments WHERE post_id = ? ORDER BY created_at ASC"
 	rows, err := r.Db.Query(query, postID)
 	if err != nil {
@@ -334,4 +331,4 @@ func (r *Userepository) GetComments(postID int) ([]models.Comment, error) {
 		comments = append(comments, comment)
 	}
 	return comments, nil
-}	
+}

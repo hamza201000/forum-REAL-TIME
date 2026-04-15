@@ -12,15 +12,14 @@ func AuthMiddleware(next http.Handler, svc *services.UserService) http.Handler {
 		cookie, err := r.Cookie("session_token")
 		if err != nil || cookie.Value == "" {
 			services.SenData(w, "error", "Unaiuthorized", http.StatusSeeOther)
-			// http.Redirect(w, r, "/login", http.StatusSeeOther)
 			return
 		}
 		sessionToken := cookie.Value
 		session, err := svc.Repo.ValidateSession(sessionToken)
 		if err != nil || session == nil {
+
 			ClearSessionCookie(w)
 			services.SenData(w, "error", "Unauthorized", http.StatusUnauthorized)
-			// http.Redirect(w, r, "/login", http.StatusSeeOther)
 			return
 		}
 		r = r.WithContext(services.WithSession(r.Context(), session))

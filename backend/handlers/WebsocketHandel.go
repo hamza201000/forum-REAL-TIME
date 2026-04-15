@@ -40,34 +40,12 @@ func WsHandle(svc *services.UserService) http.HandlerFunc {
 			conn.Close()
 			return
 		}
-		// // Configure connection limits and deadlines
-		// conn.SetReadLimit(4096)
-		// conn.SetReadDeadline(time.Now().Add(60 * time.Second))
-		// conn.SetPongHandler(func(string) error {
-		// 	conn.SetReadDeadline(time.Now().Add(60 * time.Second))
-		// 	return nil
-		// })
-
-		// Register connection
-		fmt.Println(clients)
 		mu.Lock()
-		fmt.Println(clients)
 		clients[session.UserID] = append(clients[session.UserID], conn)
-		fmt.Println(clients)
 		mu.Unlock()
-		// 	defer ticker.Stop()
-		// 	for range ticker.C {
-		// 		mu.Lock()
-		// 		err := conn.WriteMessage(websocket.PingMessage, nil)
-		// 		mu.Unlock()
-		// 		if err != nil {
-		// 			return
-		// 		}
-		// 	}
-		// }()
+		
 		defer func() {
 			mu.Lock()
-			fmt.Println("defer hhhhh")
 			for i, c := range clients[session.UserID] {
 				if c == conn {
 					clients[session.UserID] = append(clients[session.UserID][:i], clients[session.UserID][i+1:]...)
@@ -84,7 +62,7 @@ func WsHandle(svc *services.UserService) http.HandlerFunc {
 		for {
 			_, message, err := conn.ReadMessage()
 			if err != nil {
-				fmt.Println("that err", err)
+				fmt.Println( err)
 				return
 			}
 			var m models.DataMessage
@@ -108,9 +86,7 @@ func WsHandle(svc *services.UserService) http.HandlerFunc {
 					return
 				}
 				m.Id = MessageId
-				fmt.Println("Message ID:", MessageId)
 			}
-
 			dataMessageToReceiver, err := json.Marshal(m)
 			if err != nil {
 				fmt.Println(err)
@@ -122,12 +98,10 @@ func WsHandle(svc *services.UserService) http.HandlerFunc {
 				fmt.Println(err)
 				return
 			}
-			// Send to receiver
 			mu.RLock()
 			receiverConns, ok := clients[m.Receiver_id]
 			senderConns, ok2 := clients[session.UserID]
 			if ok {
-				// fmt.Println(ok, receiverConns, dataMessageToReceiver)
 				for _, target := range receiverConns {
 					target.WriteMessage(websocket.TextMessage, dataMessageToReceiver)
 				}
@@ -138,7 +112,6 @@ func WsHandle(svc *services.UserService) http.HandlerFunc {
 				}
 			}
 			mu.RUnlock()
-			// broadcastOnlineUsers(session.UserID)
 		}
 	}
 }
@@ -150,7 +123,6 @@ func StatusHandler(svc *services.UserService) http.HandlerFunc {
 		if !ok {
 			return
 		}
-
 		mu.RLock()
 		var userIds []int
 		for userId := range clients {
@@ -186,7 +158,6 @@ func broadcastOnlineUsers(userSession int) {
 		connsSnapshot[k] = v
 	}
 	mu.RUnlock()
-	fmt.Println(connsSnapshot)
 	msg := map[string]interface{}{
 		"type":     "online_users",
 		"user_ids": userIds,
