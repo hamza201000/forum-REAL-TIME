@@ -9,6 +9,7 @@ import (
 )
 
 func main() {
+	//Init
 	DB := db.InitDB()
 	defer DB.Close()
 	handler := routes.RegisterRoutes(DB)
