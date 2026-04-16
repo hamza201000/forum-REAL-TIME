@@ -5,7 +5,7 @@ import (
 )
 
 type User struct {
-	Id        int
+	Id        int   
 	Firstname string
 	Lastname  string
 	Nickname  string

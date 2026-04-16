@@ -1,16 +1,13 @@
 import { sendData } from "./api.js";
 import { getUserChat } from "./chat.js";
-import { safeSend } from "./helpers.js";
+import { safeSend } from "./socket.js";
 
 export async function renderContacts() {
   try {
-
     const res = await sendData({}, "/api/allUsers", "GET");
     const users = res && res.allusers ? res.allusers : [];
-
     safeSend({ type: "online_users" })
     return users
-
   } catch (err) {
     console.error("Failed to load contacts:", err);
   }

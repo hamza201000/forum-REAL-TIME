@@ -1,8 +1,14 @@
 import { createRegister } from "./pageRegister.js";
 import { createLogin } from "./pageLogin.js";
 import { createFeedPage } from "./pagePost.js";
+import { rrenderErrorPage } from "./errorPage.js";
 const publicPages = ['/login', '/register']
 
+
+
+// const routes {
+//     "/": createFeedPage
+// }
 const authChannel = new BroadcastChannel('auth_sync');
 
 authChannel.onmessage = (event) => {
@@ -38,12 +44,12 @@ export async function router() {
     }
     if (path == '/') {
         createFeedPage(session.username);
-        // authChannel.postMessage('refresh');
     } else if (path == '/login') {
         createLogin()
-        // authChannel.postMessage('refresh');
     } else if (path == '/register') {
         createRegister()
+    }else{
+        rrenderErrorPage({message:"Page not found"},404)
     }
 }
 
@@ -60,5 +66,7 @@ async function checkSession() {
 
 export function navigateTo(path) {
     window.history.pushState({}, '', path);
+        
+
     router()
 }

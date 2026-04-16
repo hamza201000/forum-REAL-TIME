@@ -79,3 +79,25 @@ export function checkUser(type, user) {
     return true;
 }
 
+export function checkError(resErr) {
+    if (!resErr) return;
+
+    const msg = resErr.toLowerCase();
+
+    if (msg.includes("email")) {
+        showError(resErr, ".Email");
+        return;
+    }
+    if (msg.includes("username")) {
+        showError(resErr, ".Nickname");
+        return;
+    }
+    if (msg.includes("password")) {
+        showError(resErr, ".password");
+        return;
+    }
+    if (msg.includes("user")) {
+        showError(resErr, ".user");
+        return;
+    }
+}

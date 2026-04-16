@@ -19,7 +19,7 @@ func HomeHandler() http.HandlerFunc {
 			fmt.Println("home handler", r.Method)
 			return
 		}
-		content, err := os.ReadFile("../frentend/public/index.html")
+		content, err := os.ReadFile("../frontend/public/index.html")
 		if err != nil {
 			http.Error(w, "Not found", http.StatusNotFound)
 			return

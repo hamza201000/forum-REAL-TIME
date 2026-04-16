@@ -17,7 +17,6 @@ func AuthMiddleware(next http.Handler, svc *services.UserService) http.Handler {
 		sessionToken := cookie.Value
 		session, err := svc.Repo.ValidateSession(sessionToken)
 		if err != nil || session == nil {
-
 			ClearSessionCookie(w)
 			services.SenData(w, "error", "Unauthorized", http.StatusUnauthorized)
 			return
@@ -43,6 +42,6 @@ func SetSessionCookie(session *models.Session, w http.ResponseWriter) {
 		Path:     "/",
 		Expires:  session.ExpiresAt,
 		HttpOnly: true,
-		MaxAge:   3600, // 1 hours
+		MaxAge:   3600, 
 	})
 }

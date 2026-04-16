@@ -15,7 +15,7 @@ func RegisterRoutes(DB *sql.DB) http.Handler {
 	userRepo := repository.NewUserRepository(DB)
 	userService := services.NewUserService(userRepo)
 	// userRepo.DeleteFromDB()
-	fs := http.FileServer(http.Dir("../frentend/public"))
+	fs := http.FileServer(http.Dir("../frontend/public"))
 	mux.Handle("/static/", http.StripPrefix("/static", fs)) 
 	// Register API routes
 	mux.Handle("/api/register", handlers.RegisterHandler(userService)) // Handle /register POST requests

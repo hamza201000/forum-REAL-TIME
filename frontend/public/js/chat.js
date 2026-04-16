@@ -1,4 +1,6 @@
-import { socket, formatDate } from "./helpers.js";
+import { formatDate } from "./helpers.js";
+import { socket } from "./socket.js";
+
 import { sendData } from "./api.js";
 
 
@@ -157,11 +159,6 @@ export function addMessage(dataMessage) {
     if (msgBox) {
         
         const isAtBottom = msgBox.scrollHeight - msgBox.scrollTop <= chatmsgBox.clientHeight
-        // console.log("scrollHeight",msgBox.scrollHeight);
-        // console.log("scrollTop",msgBox.scrollTop);
-        // console.log("clientHeight",msgBox.clientHeight );
-        console.log(msgBox.scrollHeight - msgBox.scrollTop);
-        
         if (dataMessage.type == "MsgtoReceiver") {
             console.log(isAtBottom);
         }

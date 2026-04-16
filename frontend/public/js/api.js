@@ -1,5 +1,5 @@
 import { navigateTo, broadcastLogin, broadcastLogout } from "./router.js";
-import { showError } from "./validation.js";
+import { checkError } from "./validation.js";
 import { renderErrorPage } from "./errorPage.js";
 
 export async function sendData(data, route, method = "POST") {
@@ -26,7 +26,7 @@ export async function sendData(data, route, method = "POST") {
 
 
         if (!res.ok) {
-            renderErrorPage({ message: "Internal server error. Please try again later." });
+            renderErrorPage({ message: result.error },res.status);
             return;
         }
 
@@ -55,25 +55,3 @@ export async function sendData(data, route, method = "POST") {
     }
 }
 
-export function checkError(resErr) {
-    if (!resErr) return;
-
-    const msg = resErr.toLowerCase();
-
-    if (msg.includes("email")) {
-        showError(resErr, ".Email");
-        return;
-    }
-    if (msg.includes("username")) {
-        showError(resErr, ".Nickname");
-        return;
-    }
-    if (msg.includes("password")) {
-        showError(resErr, ".password");
-        return;
-    }
-    if (msg.includes("user")) {
-        showError(resErr, ".user");
-        return;
-    }
-}

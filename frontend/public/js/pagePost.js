@@ -2,8 +2,8 @@
 import { sendData } from "./api.js";
 import { renderContacts } from "./renderContacts.js";
 import { addMessage, openChat } from "./chat.js";
-import { escHtml, formatDate, safeSend } from "./helpers.js";
-import { connectSocket, socket } from "./helpers.js";
+import { escHtml, formatDate } from "./helpers.js";
+import { connectSocket, socket } from "./socket.js"
 import { updateOnlineCount, updatenewMsg, updateOnlineUsers, renderCount } from "./renderContacts.js";
 import { navigateTo } from "./router.js"
 import { showError } from "./validation.js";
@@ -153,7 +153,6 @@ export async function createFeedPage(data) {
   });
   const users = await renderContacts();
   renderCount(users)
-  // safeSend({ type: "online_users" })
   socket.onmessage = (event) => {
     const data = JSON.parse(event.data)
     if (data.type === "online_users") {
