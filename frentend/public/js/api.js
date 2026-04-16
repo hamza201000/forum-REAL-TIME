@@ -51,7 +51,7 @@ export async function sendData(data, route, method = "POST") {
     } catch (error) {
 
         console.error("Fetch error:", error);
-        renderErrorPage({ message: "Network error. Check your connection and try again." });
+        renderErrorPage({ message: "Network error. Check your connection and try again." },500);
     }
 }
 

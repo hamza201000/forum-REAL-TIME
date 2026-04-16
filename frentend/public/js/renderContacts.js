@@ -30,8 +30,6 @@ export function renderCount(users) {
   });
   const allcontacts = document.getElementById("online-contacts")
   const divs = [...allcontacts.querySelectorAll('.contact-item')];
-  (divs);
-  (allcontacts);
   if (allcontacts) {
     allcontacts.innerHTML = users.map(contactRow).join("")
   }
@@ -43,6 +41,10 @@ function contactRow(u) {
   const hasNewMsg = !chatBox && u.LastMsg && u.LastMsg.Seen == 0 && u.LastMsg.Sender_id == u.User_id
   let itnkmymsg = null
   if (u.LastMsg) {
+    if (u.LastMsg.Message.length>17){
+      u.LastMsg.Message=u.LastMsg.Message.slice(0,16)+"........"
+      console.log("u.LastMsg.Message".length);
+    }
     itnkmymsg = u.LastMsg.Sender_id != u.User_id ? "you: " + u.LastMsg.Message : u.LastMsg.Username_sender + ": " + u.LastMsg.Message;
   }
   return `
@@ -91,6 +93,9 @@ export function updateOnlineUsers(userContacts, allUsersIds) {
 
 export function updatenewMsg(dataMessage) {
   let contactUser = null
+  if (dataMessage.Message.length>17){
+      dataMessage.Message=dataMessage.Message.slice(0,16)+"........"
+    }
   if (dataMessage.type == "MsgtoReceiver") {
     contactUser = document.getElementById("" + dataMessage.Sender_id)
     const chatBox = document.getElementById("chat-" + dataMessage.Sender_id)

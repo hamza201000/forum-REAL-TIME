@@ -1,7 +1,8 @@
-export function renderErrorPage(err) {
+export function renderErrorPage(err, statusCode) {
     const app = document.getElementById("app");
 
     const message = err?.message || "An unexpected error occurred.";
+    const code = statusCode || err?.status || err?.statusCode || null;
 
     app.innerHTML = `
         <nav class="navbar">
@@ -12,6 +13,8 @@ export function renderErrorPage(err) {
             <div class="error-card">
 
                 <div class="error-icon">⚠️</div>
+
+                ${code ? `<div class="error-status">${code}</div>` : ""}
 
                 <div class="error-body">
                     <h1 class="error-title">Something went wrong</h1>

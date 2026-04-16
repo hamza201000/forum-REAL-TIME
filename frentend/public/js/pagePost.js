@@ -22,11 +22,9 @@ export async function createFeedPage(data) {
       <span class="navbar-brand" id="nav-home">Forum</span>
       <div class="navbar-actions">
         <button class="hamburger" id="hamburger-btn" aria-label="Menu">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-            <line x1="3" y1="6"  x2="21" y2="6"/>
-            <line x1="3" y1="12" x2="21" y2="12"/>
-            <line x1="3" y1="18" x2="21" y2="18"/>
-          </svg>
+          <span></span>
+          <span></span>
+          <span></span>
         </button>
         <button class="profile-btn" id="profile-btn">
           <div class="avatar" id="nav-avatar">${avatar}</div>
@@ -64,11 +62,7 @@ export async function createFeedPage(data) {
     </div>
 
     <button class="fab" id="fab-btn" title="Create post">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-           stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="12" y1="5" x2="12" y2="19"/>
-        <line x1="5"  y1="12" x2="19" y2="12"/>
-      </svg>
+      
     </button>
 
     <div class="modal-overlay" id="modal-overlay">
@@ -120,8 +114,6 @@ export async function createFeedPage(data) {
     counter.textContent = `${len} / 1000`;
     counter.classList.toggle("warn", len > 900);
   });
-
-
   const leftBar = document.getElementById("left-bar");
   const sidebarOverlay = document.getElementById("sidebar-overlay");
   const hamburgerBtn = document.getElementById("hamburger-btn");
@@ -132,6 +124,10 @@ export async function createFeedPage(data) {
   }
   hamburgerBtn.addEventListener("click", toggleContacts);
   sidebarOverlay.addEventListener("click", toggleContacts);
+
+
+
+  
 
 
   document.getElementById("nav-home")
@@ -237,8 +233,6 @@ async function renderFeed() {
             </div>
             <div class="post-meta">
             <span>${p.category}</span>
-              <span>·</span>
-             
             </div>
             <div class="post-divider" ></div>
             <div class="post-face" data-index="${p.id}">
@@ -370,7 +364,6 @@ document.addEventListener("click", async (e) => {
     return;
   }
 
-  // send comment
   const sendBtn = e.target.closest(".send-comment-btn");
   if (sendBtn) {
     const postId = sendBtn.id.replace("send-btn-", "");
@@ -394,7 +387,6 @@ document.addEventListener("click", async (e) => {
 
 
 function openPopup(contnainer, postId) {
-  // activePostId = postId;
   return `
       <div class="modal-card" id="modal-card">
         ${contnainer}
@@ -420,9 +412,7 @@ function openPopup(contnainer, postId) {
 async function refreshComments(postId) {
   const commentListContainer = document.getElementById("comment-list-" + postId);
   if (!commentListContainer) return;
-
   commentListContainer.innerHTML = `<div class="comments-loading">Loading comments…</div>`;
-
   try {
     const res = await sendData({}, `/api/getComments?postId=${postId}`, "GET");
     const comments = res?.comments || [];
@@ -438,14 +428,10 @@ async function refreshComments(postId) {
             <p class="comment-content">${escHtml(c.content)}</p>
           </div>
         `).join("")
-
-
     commentListContainer.innerHTML = commentList || `<p style="text-align:center;color:#666">No comments yet.</p>`;
     commentListContainer.scrollTop = commentListContainer.scrollHeight;
-
   } catch (err) {
     console.error("Failed to refresh comments:", err);
-    // showError("Failed to load comments.",commentListContainer)
     commentListContainer.innerHTML = `<p style="color:red;text-align:center">Failed to load comments.</p>`;
   }
 }

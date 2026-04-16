@@ -14,7 +14,6 @@ func InitDB() *sql.DB {
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	sqlFile, err := os.ReadFile("db/schema.sql")
 	if err != nil {
 		log.Fatal(err)
