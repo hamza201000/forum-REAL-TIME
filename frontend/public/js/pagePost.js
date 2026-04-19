@@ -14,7 +14,6 @@ export async function createFeedPage(data) {
   const user = data || "User";
   const avatar = (user || "U")[0].toUpperCase();
 
-  (localStorage.getItem("session_token"));
 
   app.innerHTML = `
   
@@ -304,6 +303,7 @@ function closeModal(element) {
   document.getElementById("modal-title").value = "";
   document.getElementById("modal-body").value = "";
   document.getElementById("modal-char-count").textContent = "0 / 1000";
+  document.getElementById("modal-category").value=""
 }
 
 

@@ -127,10 +127,11 @@ func LogoutHandler(svc *services.UserService) http.Handler {
 func PostsHandler(svc *services.UserService) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
-			services.SenData(w, "message", "Posts endpoint is working", http.StatusOK)
+			services.SenData(w, "error", "Method not allowed. Use POST", http.StatusMethodNotAllowed)
 			return
 		}
 		var data models.Post
+		fmt.Println("BODY",&r)
 		err := json.NewDecoder(r.Body).Decode(&data)
 		if err != nil {
 			services.SenData(w, "error", "Invalid request body", http.StatusBadRequest)
