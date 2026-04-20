@@ -55,23 +55,16 @@ export function createRegister() {
         const form = document.getElementById("userForm")
         const formData = new FormData(form)
         const data = (Object.fromEntries(formData.entries()))
-       
-       
-        
         if (!checkUser("register", data)) {
             return
         }
         sendData(data, "/api/register")
     })
-
     const loginlink = document.getElementById("login-link")
-    if (loginlink) {
-        loginlink.addEventListener("click", function (e) {
-            e.preventDefault();
-            navigateTo('/login');
-        });
-    }
-
+    loginlink.addEventListener("click", function (e) {
+        e.preventDefault();
+        navigateTo('/login');
+    });
 }
 
 

@@ -125,8 +125,6 @@ export function closeChat(userId) {
 export function sendMessage(input, user) {
     const message = input.value.trim();
     if (!message) return;
-
-
     socket.send(JSON.stringify({
         Type: "MsgtoReceiver",
         Receiver_id: Number(user.id),
@@ -136,12 +134,11 @@ export function sendMessage(input, user) {
 }
 
 export function addMessage(dataMessage) {
-
     let msgBox = null
-    let  chatmsgBox = null
+    let chatmsgBox = null
     if (dataMessage.type === "MsgtoSender") {
         msgBox = document.getElementById("messages-" + dataMessage.Receiver_id)
-        chatmsgBox=document.getElementById("chat-" + dataMessage.Receiver_id)
+        chatmsgBox = document.getElementById("chat-" + dataMessage.Receiver_id)
         if (msgBox) {
             if (lastMsgID == 0) {
                 lastMsgID = dataMessage.id
@@ -150,25 +147,21 @@ export function addMessage(dataMessage) {
         }
     } else if (dataMessage.type === "MsgtoReceiver") {
         msgBox = document.getElementById("messages-" + dataMessage.Sender_id)
-        chatmsgBox=document.getElementById("chat-" + dataMessage.Sender_id)
+        chatmsgBox = document.getElementById("chat-" + dataMessage.Sender_id)
         if (msgBox) {
             msgBox.appendChild(buildMessage(dataMessage, Number(msgBox.id.replace(/\D/g, ""))))
         }
     }
-    
     if (msgBox) {
-        
         const isAtBottom = msgBox.scrollHeight - msgBox.scrollTop <= chatmsgBox.clientHeight
-        if (dataMessage.type == "MsgtoReceiver") {
-            console.log(isAtBottom);
-        }
         if ((dataMessage.type === "MsgtoSender") || (dataMessage.type == "MsgtoReceiver" && isAtBottom)) {
             msgBox.scrollTop = msgBox.scrollHeight;
         }
     }
 }
 
-export function buildMessage(data, myMessage) {
+export function buildMessage(data, userBarId) {
+    const myMessage = userBarId == data.Receiver_id
     const div = document.createElement("div");
     div.className = `message ${myMessage ? 'me' : 'them'}`;
     div.innerHTML = `<div class="bubble">${data.Message}

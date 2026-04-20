@@ -34,9 +34,10 @@ func (u *Userepository) DeleteFromDB() error {
 }
 
 func (r *Userepository) CreateUser(user models.User) error {
-	query := "INSERT INTO users (firstname, lastname, username, age, gender, email, password) VALUES (?, ?, ?, ?, ?, ?, ?)"
+	query := "INSERT INTO users (firstname, lastname, username, age, gender, email, password) VALUES (?, ?, ?, ?, ?, ?, ?) "
 	user.Email = strings.ToLower(strings.TrimSpace(user.Email))
 	user.Nickname = strings.ToLower(strings.TrimSpace(user.Nickname))
+
 	_, err := r.Db.Exec(query, user.Firstname, user.Lastname, user.Nickname, user.Age, user.Gender, user.Email, user.Password)
 	if err != nil {
 		if strings.Contains(err.Error(), "UNIQUE") {
@@ -199,7 +200,6 @@ func (r *Userepository) GetAllUsers(userid int) ([]models.Client, error) {
 				return nil, err
 			}
 		}
-
 		Users = append(Users, user)
 	}
 	return Users, nil
@@ -287,7 +287,6 @@ func (r *Userepository) GetUserStatus(userID int) (bool, error) {
 }
 
 func (r *Userepository) LikePost(postID int, userID int) error {
-	
 	query := "INSERT INTO likes (post_id, user_id) VALUES (?, ?)"
 	_, err := r.Db.Exec(query, postID, userID)
 	if err != nil {

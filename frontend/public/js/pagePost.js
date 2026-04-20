@@ -7,11 +7,15 @@ import { connectSocket, socket } from "./socket.js"
 import { updateOnlineCount, updatenewMsg, updateOnlineUsers, renderCount } from "./renderContacts.js";
 import { navigateTo } from "./router.js"
 import { showError } from "./validation.js";
+import { safeSend } from "./socket.js";
 
-export async function createFeedPage(data) {
+function logouthandler() {
+  sendData({}, "api/logout", "POST")
+}
+export async function createFeedPage(dataUser) {
   connectSocket()
   const app = document.getElementById("app");
-  const user = data || "User";
+  const user = dataUser || "User";
   const avatar = (user || "U")[0].toUpperCase();
 
 
@@ -74,12 +78,16 @@ export async function createFeedPage(data) {
         <div class="modal-field">
           <input id="modal-title" type="text" placeholder="Post title…"
                  maxlength="120" autocomplete="off"/>
+          <div class="modal-error" id="title-error"></div>
         </div>
         <div class="modal-field">
           <textarea id="modal-body" placeholder="What's on your mind?"
                     maxlength="1000"></textarea>
           <div class="char-count" id="modal-char-count">0 / 1000</div>
+          <div class="modal-error" id="body-error"></div>
+
         </div>
+        
         <div class="modal-divider">
           <select id="modal-category">
             <option value="" disabled selected>Choose category</option>
@@ -124,11 +132,6 @@ export async function createFeedPage(data) {
   hamburgerBtn.addEventListener("click", toggleContacts);
   sidebarOverlay.addEventListener("click", toggleContacts);
 
-
-
-  
-
-
   document.getElementById("nav-home")
     .addEventListener("click", () => navigateTo("/"));
 
@@ -138,7 +141,20 @@ export async function createFeedPage(data) {
     const title = document.getElementById("modal-title").value.trim();
     const content = document.getElementById("modal-body").value.trim();
     const categorySelect = document.getElementById("modal-category").value.trim();
-    if (!title || !content) return;
+    const titleError = document.getElementById("title-error")
+    const bodyError = document.getElementById("body-error")
+    titleError.classList.remove("visible")
+    bodyError.classList.remove("visible")
+    if (!title || !content) {
+      if (!title) {
+        titleError.classList.add("visible")
+        titleError.textContent = "⚠ Title cannot be empty"
+      } else if (!content) {
+        bodyError.classList.add("visible")
+        bodyError.textContent = "⚠ Content cannot be empty"
+      }
+      return;
+    }
     try {
       await sendData({ title, content, category: categorySelect }, "/api/posts", "POST");
       closeModal(overlay);
@@ -147,19 +163,22 @@ export async function createFeedPage(data) {
       console.error("Publish failed:", err);
     }
   });
-  document.getElementById("logout-btn").addEventListener("click", () => {
-    sendData({}, "/api/logout", "POST");
+  const logoutbutton = document.getElementById("logout-btn")
+  logoutbutton.addEventListener("click", () => {
+    logouthandler();
   });
-  const users = await renderContacts();
+  let users = await renderContacts();
   renderCount(users)
-  socket.onmessage = (event) => {
+  socket.onmessage = async (event) => {
     const data = JSON.parse(event.data)
     if (data.type === "online_users") {
       (data);
       const userContacts = document.querySelectorAll(".contact-item")
-      updateOnlineUsers(userContacts, data.user_ids)
+      if (userContacts) {
+
+        updateOnlineUsers(userContacts, data.user_ids)
+      }
     } else if (data.type === "MsgtoReceiver" || data.type === "MsgtoSender") {
-      ("data", data);
       addMessage(data)
       users.forEach(u => {
         // Update last message for relevant users
@@ -186,7 +205,11 @@ export async function createFeedPage(data) {
       }
       updateOnlineCount(users)
       updatenewMsg(data)
-    };
+    } else if (data.type == "new_user") {
+      console.log(data);
+      users = await renderContacts();
+      renderCount(users)
+    }
   }
 }
 
@@ -194,15 +217,13 @@ export async function createFeedPage(data) {
 
 async function renderFeed() {
   const list = document.getElementById("feed-list");
-  
+
 
   list.innerHTML = `<div class="feed-empty"><p>Loading…</p></div>`;
 
   try {
     const res = await sendData({}, "/api/getPosts", "GET");
     const posts = res?.allpost ?? [];
-    (posts);
-
     if (posts.length === 0) {
       list.innerHTML = `
           <div class="feed-empty">
@@ -211,9 +232,7 @@ async function renderFeed() {
           </div>`;
       return;
     }
-
     list.innerHTML = posts.map((p, i) => {
-
       const initial = (p.username || "U")[0].toUpperCase();
       const liked = p.likedBy?.includes(user.username);
       (p.created_at);
@@ -272,13 +291,8 @@ document.addEventListener("click", async (e) => {
   if (!btn) return
   const postId = btn.dataset.postid;
   try {
-    
     await sendData({ postId: Number(postId) }, "/api/like", "POST");
-  
     document.querySelectorAll(".likenmb-" + postId).forEach(like => {
-      
-
-
       if (like.style.color === "red") {
         like.style.color = "";
         like.textContent = parseInt(like.textContent) - 1 + " Likes";
@@ -287,7 +301,7 @@ document.addEventListener("click", async (e) => {
       like.style.color = "red";
       like.textContent = parseInt(like.textContent) + 1 + " Likes";
     })
-    
+
   } catch (err) {
     console.error("Like failed:", err);
   }
@@ -303,7 +317,9 @@ function closeModal(element) {
   document.getElementById("modal-title").value = "";
   document.getElementById("modal-body").value = "";
   document.getElementById("modal-char-count").textContent = "0 / 1000";
-  document.getElementById("modal-category").value=""
+  document.getElementById("modal-category").value = ""
+  document.getElementById("title-error").classList.remove("visible")
+  document.getElementById("body-error").classList.remove("visible")
 }
 
 
@@ -328,7 +344,7 @@ document.body.addEventListener("click", (e) => {
   if (document.getElementById("chat-" + user.id)) return;
   document.getElementById("chat-container").innerHTML = ""
   console.log("open");
-  
+
   openChat(user);
   contactItem.style.backgroundColor = ""
   safeSend({
@@ -350,9 +366,9 @@ document.addEventListener("click", async (e) => {
     if (isactv && isactv.classList.contains("active")) {
       return
     }
-    isactv.innerHTML=openPopup(post.innerHTML, postId)
+    isactv.innerHTML = openPopup(post.innerHTML, postId)
     isactv.classList.add("active");
-    
+
     await refreshComments(postId)
 
     return;

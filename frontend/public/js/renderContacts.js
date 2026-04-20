@@ -23,10 +23,9 @@ export function renderCount(users) {
     if (u2.LastMsg == null) {
       return -1
     }
-    return u1.LastMsg.id > u2.LastMsg.id ? -1 : 1; // Online users first
+    return u1.LastMsg.id > u2.LastMsg.id ? -1 : 1; 
   });
   const allcontacts = document.getElementById("online-contacts")
-  const divs = [...allcontacts.querySelectorAll('.contact-item')];
   if (allcontacts) {
     allcontacts.innerHTML = users.map(contactRow).join("")
   }
@@ -38,9 +37,9 @@ function contactRow(u) {
   const hasNewMsg = !chatBox && u.LastMsg && u.LastMsg.Seen == 0 && u.LastMsg.Sender_id == u.User_id
   let itnkmymsg = null
   if (u.LastMsg) {
-    if (u.LastMsg.Message.length>17){
-      u.LastMsg.Message=u.LastMsg.Message.slice(0,16)+"........"
-      console.log("u.LastMsg.Message".length);
+    if (u.LastMsg.Message.length > 17) {
+      u.LastMsg.Message = u.LastMsg.Message.slice(0, 16) + "........"
+      
     }
     itnkmymsg = u.LastMsg.Sender_id != u.User_id ? "you: " + u.LastMsg.Message : u.LastMsg.Username_sender + ": " + u.LastMsg.Message;
   }
@@ -90,9 +89,9 @@ export function updateOnlineUsers(userContacts, allUsersIds) {
 
 export function updatenewMsg(dataMessage) {
   let contactUser = null
-  if (dataMessage.Message.length>17){
-      dataMessage.Message=dataMessage.Message.slice(0,16)+"........"
-    }
+  if (dataMessage.Message.length > 17) {
+    dataMessage.Message = dataMessage.Message.slice(0, 16) + "........"
+  }
   if (dataMessage.type == "MsgtoReceiver") {
     contactUser = document.getElementById("" + dataMessage.Sender_id)
     const chatBox = document.getElementById("chat-" + dataMessage.Sender_id)
@@ -111,6 +110,8 @@ export function updatenewMsg(dataMessage) {
 
 
 export function updateOnlineCount(users) {
+  console.log(users);
+  
   users.sort((u1, u2) => {
     if (u1.LastMsg == null && u2.LastMsg == null) {
       return 0
@@ -121,7 +122,7 @@ export function updateOnlineCount(users) {
     if (u2.LastMsg == null) {
       return -1
     }
-    return u1.LastMsg.id > u2.LastMsg.id ? -1 : 1; 
+    return u1.LastMsg.id > u2.LastMsg.id ? -1 : 1;
   });
   const allcontacts = document.getElementById("online-contacts")
   const divs = [...document.querySelectorAll('.contact-item')];

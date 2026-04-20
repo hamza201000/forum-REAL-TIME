@@ -1,14 +1,10 @@
 import { createRegister } from "./pageRegister.js";
 import { createLogin } from "./pageLogin.js";
 import { createFeedPage } from "./pagePost.js";
-import { rrenderErrorPage } from "./errorPage.js";
+import { renderErrorPage } from "./errorPage.js";
 const publicPages = ['/login', '/register']
 
 
-
-// const routes {
-//     "/": createFeedPage
-// }
 const authChannel = new BroadcastChannel('auth_sync');
 
 authChannel.onmessage = (event) => {
@@ -49,7 +45,7 @@ export async function router() {
     } else if (path == '/register') {
         createRegister()
     }else{
-        rrenderErrorPage({message:"Page not found"},404)
+        renderErrorPage({message:"Page not found"},404)
     }
 }
 

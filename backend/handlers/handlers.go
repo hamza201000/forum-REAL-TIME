@@ -38,13 +38,10 @@ func RegisterHandler(svc *services.UserService) http.HandlerFunc {
 			fmt.Println(err)
 			return
 		}
-
 		err = svc.RegisterUser(data)
 		if err != nil {
 			fmt.Println(err)
-
 			if strings.Contains(err.Error(), "email") {
-
 				services.SenData(w, "error", "Email already exists", http.StatusConflict) // 409
 				return
 			}
@@ -55,6 +52,7 @@ func RegisterHandler(svc *services.UserService) http.HandlerFunc {
 			services.SenData(w, "error", "Failed to register user", http.StatusInternalServerError)
 			return
 		}
+		broadcastNewUsers()
 		services.SenData(w, "message", "User registered successfully", http.StatusOK)
 	}
 }
@@ -94,7 +92,7 @@ func LoginHandler(svc *services.UserService) http.HandlerFunc {
 			return
 		}
 		middleware.SetSessionCookie(session, w)
-		broadcastOnlineUsers(userID)
+		broadcastOnlineUsers()
 		services.SenData(w, "message", "User logged in successfully", http.StatusOK)
 	}
 }
@@ -117,7 +115,7 @@ func LogoutHandler(svc *services.UserService) http.Handler {
 		cookie, _ := r.Cookie("session_token")
 		session, _ := svc.Repo.ValidateSession(cookie.Value)
 		delete(clients, session.UserID)
-		broadcastOnlineUsers(session.UserID)
+		broadcastOnlineUsers()
 		svc.Repo.DeleteSession(cookie.Value)
 		middleware.ClearSessionCookie(w)
 		services.SenData(w, "message", "User logged out successfully", http.StatusOK)
@@ -131,7 +129,6 @@ func PostsHandler(svc *services.UserService) http.Handler {
 			return
 		}
 		var data models.Post
-		fmt.Println("BODY",&r)
 		err := json.NewDecoder(r.Body).Decode(&data)
 		if err != nil {
 			services.SenData(w, "error", "Invalid request body", http.StatusBadRequest)
@@ -204,6 +201,7 @@ func GetMessages(svc *services.UserService) http.Handler {
 		}
 		AllMessages, err := svc.Repo.GetMessages(msg.LastMsg, session.UserID, msg.UserID)
 		if err != nil {
+			broadcastOnlineUsers()
 			fmt.Println(err)
 			return
 		}

@@ -17,25 +17,14 @@ export async function sendData(data, route, method = "POST") {
     try {
         const res = await fetch(route, options);
         const result = await res.json();
-
-
         if (res.status >= 400 && res.status < 500) {
             checkError(result.error);
             return;
         }
-
-
         if (!res.ok) {
             renderErrorPage({ message: result.error },res.status);
             return;
         }
-
-
-        if (method === "GET") {
-            return result;
-        }
-
-
         if (route === "/api/register") {
             navigateTo("/login");
         } else if (route === "/api/login") {
@@ -45,13 +34,11 @@ export async function sendData(data, route, method = "POST") {
         } else if (route === "/api/post") {
             navigateTo("/");
         }
-
         return result;
-
     } catch (error) {
-
         console.error("Fetch error:", error);
         renderErrorPage({ message: "Network error. Check your connection and try again." },500);
+        location.reload()
     }
 }
 

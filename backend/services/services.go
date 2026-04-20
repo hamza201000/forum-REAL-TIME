@@ -69,8 +69,8 @@ func (s *UserService) CheckDataPost(post models.Post) error {
 	if len(post.Content) > 1000 {
 		return errors.New("content must be less than 1000 characters")
 	}
-	s.Repo.CreatePost(post)
-	return nil
+	
+	return s.Repo.CreatePost(post)
 }
 
 func Checkcategory(category string) bool {

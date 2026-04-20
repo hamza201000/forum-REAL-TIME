@@ -1379,7 +1379,6 @@ position: fixed;
 }
 
 .message.them {
-  
   align-self: flex-start;
 }
 .bubble {
@@ -1704,3 +1703,18 @@ post-popup.active {
   }
 }
 
+.modal-error {
+  display: none;
+  font-size: 12px;
+  color: var(--red);
+  background: var(--red-dim);
+  border: 1px solid rgba(239, 68, 68, .2);
+  border-radius: 8px;
+  padding: 7px 12px;
+  margin-top: 6px;
+  animation: fadeUp .2s ease both;
+}
+
+.modal-error.visible {
+  display: block;
+}
