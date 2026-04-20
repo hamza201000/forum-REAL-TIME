@@ -53,12 +53,17 @@ function contactRow(u) {
           </div>
           
           <div class="new-message">
-          <span >${itnkmymsg ? itnkmymsg : ""}</span>
+          <span >${itnkmymsg ? ignorehtml(itnkmymsg) : ""}</span>
           </div>
           ${!u.online && u.lastSeen
       ? `<span class="contact-time">${u.lastSeen}</span>`
       : ""}
         </div>`;
+}
+function ignorehtml(str) {
+    const div = document.createElement("div");
+    div.textContent = str;
+    return div.innerHTML;
 }
 export function updateOnlineUsers(userContacts, allUsersIds) {
   if (allUsersIds && allUsersIds.length !== 0) {

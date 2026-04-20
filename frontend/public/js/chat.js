@@ -164,9 +164,15 @@ export function buildMessage(data, userBarId) {
     const myMessage = userBarId == data.Receiver_id
     const div = document.createElement("div");
     div.className = `message ${myMessage ? 'me' : 'them'}`;
-    div.innerHTML = `<div class="bubble">${data.Message}
+    div.innerHTML = `<div class="bubble">${ignorehtml(data.Message)}
        <span class="spacer"></span>
     <span class="time">${formatDate(data.created_at)}</span>
     </div>`;
     return div;
+}
+
+function ignorehtml(str) {
+    const div = document.createElement("div");
+    div.textContent = str;
+    return div.innerHTML;
 }
