@@ -1,13 +1,13 @@
 
-import { sendData } from "./api.js";
-import { renderContacts } from "./renderContacts.js";
-import { addMessage, openChat } from "./chat.js";
-import { escHtml, formatDate } from "./helpers.js";
-import { connectSocket, socket } from "./socket.js"
-import { updateOnlineCount, updatenewMsg, updateOnlineUsers, renderCount } from "./renderContacts.js";
-import { navigateTo } from "./router.js"
-import { showError } from "./validation.js";
-import { safeSend } from "./socket.js";
+import { sendData } from "../core/api.js";
+import { renderContacts } from "../chat/renderContacts.js";
+import { addMessage, openChat } from "../chat/chat.js";
+import { escHtml, formatDate } from "../utils/helpers.js";
+import { connectSocket, socket } from "../chat/socket.js"
+import { updateOnlineCount, updatenewMsg, updateOnlineUsers, renderCount } from "../chat/renderContacts.js";
+import { navigateTo } from "../core/router.js"
+import { showError } from "../utils/validation.js";
+import { safeSend } from "../chat/socket.js";
 
 function logouthandler() {
   sendData({}, "api/logout", "POST")
@@ -450,4 +450,3 @@ async function refreshComments(postId) {
     commentListContainer.innerHTML = `<p style="color:red;text-align:center">Failed to load comments.</p>`;
   }
 }
-

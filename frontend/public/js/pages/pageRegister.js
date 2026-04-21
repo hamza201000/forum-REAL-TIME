@@ -1,6 +1,6 @@
-import { sendData } from "./api.js"
-import { checkUser } from "./validation.js"
-import { navigateTo } from "./router.js"
+import { sendData } from "../core/api.js"
+import { checkUser } from "../utils/validation.js"
+import { navigateTo } from "../core/router.js"
 export function createRegister() {
     const app = document.getElementById("app")
     app.innerHTML = `<form id="userForm" class="card">
@@ -66,7 +66,6 @@ export function createRegister() {
         navigateTo('/login');
     });
 }
-
 
 
 

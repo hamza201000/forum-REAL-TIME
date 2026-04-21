@@ -1,4 +1,4 @@
-import { sendData } from "./api.js";
+import { sendData } from "../core/api.js";
 import { getUserChat } from "./chat.js";
 import { safeSend } from "./socket.js";
 
@@ -147,6 +147,5 @@ export function updateOnlineCount(users) {
   })
   divs.forEach(d => allcontacts.appendChild(d))
 }
-
 
 

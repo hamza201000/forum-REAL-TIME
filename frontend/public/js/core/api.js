@@ -1,6 +1,6 @@
 import { navigateTo, broadcastLogin, broadcastLogout } from "./router.js";
-import { checkError } from "./validation.js";
-import { renderErrorPage } from "./errorPage.js";
+import { checkError } from "../utils/validation.js";
+import { renderErrorPage } from "../pages/errorPage.js";
 
 export async function sendData(data, route, method = "POST") {
     const options = {
@@ -41,4 +41,3 @@ export async function sendData(data, route, method = "POST") {
         location.reload()
     }
 }
-

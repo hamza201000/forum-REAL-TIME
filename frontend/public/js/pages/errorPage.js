@@ -1,12 +1,12 @@
 
-import { router } from "./router.js";
+import { router } from "../core/router.js";
 
 
 
 
 function cor() {
-window.history.replaceState({}, '', "/")
-router()
+    window.history.replaceState({}, '', "/")
+    router()
 }
 
 export function renderErrorPage(err, statusCode) {
@@ -44,8 +44,7 @@ export function renderErrorPage(err, statusCode) {
         </div>
     `;
 
-   const f = document.querySelector(".btn.error-btn")
-f.addEventListener('click', cor)
+    const f = document.querySelector(".btn.error-btn")
+    f.addEventListener('click', cor)
 
 }
-

@@ -1,6 +1,6 @@
-import { checkUser } from "./validation.js"
-import { sendData } from "./api.js"
-import { navigateTo } from "./router.js"
+import { checkUser } from "../utils/validation.js"
+import { sendData } from "../core/api.js"
+import { navigateTo } from "../core/router.js"
 
 export function createLogin() {
     const app = document.getElementById("app")
@@ -50,5 +50,4 @@ export function createLogin() {
         });
     
 }
-
 

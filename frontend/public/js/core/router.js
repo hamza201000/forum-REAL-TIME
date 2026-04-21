@@ -1,7 +1,7 @@
-import { createRegister } from "./pageRegister.js";
-import { createLogin } from "./pageLogin.js";
-import { createFeedPage } from "./pagePost.js";
-import { renderErrorPage } from "./errorPage.js";
+import { createRegister } from "../pages/pageRegister.js";
+import { createLogin } from "../pages/pageLogin.js";
+import { createFeedPage } from "../pages/pagePost.js";
+import { renderErrorPage } from "../pages/errorPage.js";
 const publicPages = ['/login', '/register']
 
 
