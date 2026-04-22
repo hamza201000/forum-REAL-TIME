@@ -8,6 +8,10 @@ export function connectSocket() {
     messageQueue.forEach(msg => socket.send(msg))
     messageQueue.length = 0
   }
+  socket.onclose = () => {
+    console.log("Socket closed")
+  }
+
 }
 
 export function safeSend(data) {

@@ -10,7 +10,7 @@ import { showError } from "../utils/validation.js";
 import { safeSend } from "../chat/socket.js";
 
 function logouthandler() {
-  sendData({}, "api/logout", "POST")
+  sendData({}, "/api/logout", "POST")
 }
 export async function createFeedPage(dataUser) {
   connectSocket()
