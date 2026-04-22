@@ -206,6 +206,7 @@ func GetMessages(svc *services.UserService) http.Handler {
 			return
 		}
 		AllMessages, err := svc.Repo.GetMessages(msg.LastMsg, session.UserID, msg.UserID)
+		
 		if err != nil {
 			broadcastOnlineUsers()
 			fmt.Println(err)

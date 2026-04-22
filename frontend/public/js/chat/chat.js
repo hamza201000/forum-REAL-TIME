@@ -81,6 +81,8 @@ export async function getMessage(User_id) {
         "/api/getMessages",
         "POST"
     );
+   
+    
     if (dataMessage && !Array.isArray(dataMessage.allmessages)) {
         console.error("Not array:", dataMessage);
         return;
@@ -98,6 +100,7 @@ export async function getMessage(User_id) {
     }
 
     lastMsgID = dataMessage.allmessages[dataMessage.allmessages.length - 1] ? dataMessage.allmessages[dataMessage.allmessages.length - 1].id : lastMsgID; // update lastMsgID to oldest loaded message
+   
     isLoading = false;
 }
 
@@ -164,7 +167,8 @@ export function buildMessage(data, userBarId) {
     const myMessage = userBarId == data.Receiver_id
     const div = document.createElement("div");
     div.className = `message ${myMessage ? 'me' : 'them'}`;
-    div.innerHTML = `<div class="bubble">${ignorehtml(data.Message)}
+    div.innerHTML = `
+    <div class="bubble">${data.Username_sender}: <br>${ignorehtml(data.Message)}
        <span class="spacer"></span>
     <span class="time">${formatDate(data.created_at)}</span>
     </div>`;
