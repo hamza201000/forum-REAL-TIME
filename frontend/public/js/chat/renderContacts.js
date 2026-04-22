@@ -101,14 +101,14 @@ export function updatenewMsg(dataMessage) {
     contactUser = document.getElementById("" + dataMessage.Sender_id)
     const chatBox = document.getElementById("chat-" + dataMessage.Sender_id)
     const newMsg = contactUser.querySelector(".new-message")
-    newMsg.innerHTML = `<span>${dataMessage.Username_sender + ": " + dataMessage.Message}</span>`
+    newMsg.innerHTML = `<span>${dataMessage.Username_sender + ": " + ignorehtml(dataMessage.Message)}</span>`
     if (!chatBox) {
       contactUser.style.backgroundColor = "red"
     }
   } else if (dataMessage.type == "MsgtoSender") {
     contactUser = document.getElementById("" + dataMessage.Receiver_id)
     const newMsg = contactUser.querySelector(".new-message")
-    newMsg.innerHTML = `<span>${"you:" + dataMessage.Message}</span>`
+    newMsg.innerHTML = `<span>${"you:" + ignorehtml(dataMessage.Message)}</span>`
     contactUser.style.backgroundColor = ""
   }
 }

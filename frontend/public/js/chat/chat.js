@@ -36,7 +36,6 @@ export function openChat(user) {
     </div>
   `;
     container.appendChild(chatBox);
-
     isLoading = false;
     lastMsgID = 0;
     getMessage(user.id)
@@ -82,7 +81,7 @@ export async function getMessage(User_id) {
         "POST"
     );
     if (dataMessage && !Array.isArray(dataMessage.allmessages)) {
-        console.error("Not array:", dataMessage);
+        // console.error("Not array:", dataMessage);
         return;
     }
     const container = document.getElementById(`messages-${User_id}`);

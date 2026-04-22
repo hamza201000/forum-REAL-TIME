@@ -30,6 +30,8 @@ export function createLogin() {
 </p>
 
 </form>
+    <div class="toast-container" id="toast-container"></div>
+
 `
     const form = document.getElementById("userForm")
     

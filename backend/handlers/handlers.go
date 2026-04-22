@@ -15,8 +15,8 @@ import (
 
 func HomeHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodPost {
-			fmt.Println("home handler", r.Method)
+		if r.Method != http.MethodGet {
+			services.SenData(w, "error", "Method not allowed. Use POST", http.StatusMethodNotAllowed)
 			return
 		}
 		content, err := os.ReadFile("../frontend/public/index.html")
@@ -31,6 +31,10 @@ func HomeHandler() http.HandlerFunc {
 
 func RegisterHandler(svc *services.UserService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			services.SenData(w, "error", "Method not allowed. Use POST", http.StatusMethodNotAllowed)
+			return
+		}
 		var data models.User
 		err := json.NewDecoder(r.Body).Decode(&data)
 		if err != nil {
@@ -58,7 +62,8 @@ func RegisterHandler(svc *services.UserService) http.HandlerFunc {
 
 func LoginHandler(svc *services.UserService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodGet {
+		if r.Method != http.MethodPost {
+			services.SenData(w, "error", "Method not allowed. Use POST", http.StatusMethodNotAllowed)
 			return
 		}
 		var data models.LoginRequest
@@ -105,6 +110,10 @@ func LoginHandler(svc *services.UserService) http.HandlerFunc {
 
 func SessionHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			services.SenData(w, "error", "Method not allowed. Use POST", http.StatusMethodNotAllowed)
+			return
+		}
 		session, _ := services.GetSession(r.Context())
 		w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Type", "application/json")
@@ -118,9 +127,19 @@ func SessionHandler() http.Handler {
 
 func LogoutHandler(svc *services.UserService) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			services.SenData(w, "error", "Method not allowed. Use POST", http.StatusMethodNotAllowed)
+			return
+		}
 		cookie, _ := r.Cookie("session_token")
 		session, _ := svc.Repo.ValidateSession(cookie.Value)
-		delete(clients, session.UserID)
+		check := checkOnlineUser(session.UserID)
+		if check {
+			for _, conn := range clients[session.UserID] {
+				conn.Close()
+			}
+			delete(clients, session.UserID)
+		}
 		broadcastOnlineUsers()
 		svc.Repo.DeleteSession(cookie.Value)
 		middleware.ClearSessionCookie(w)
@@ -130,7 +149,7 @@ func LogoutHandler(svc *services.UserService) http.Handler {
 
 func PostsHandler(svc *services.UserService) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodGet {
+		if r.Method != http.MethodPost {
 			services.SenData(w, "error", "Method not allowed. Use POST", http.StatusMethodNotAllowed)
 			return
 		}
@@ -143,7 +162,7 @@ func PostsHandler(svc *services.UserService) http.Handler {
 		ctx := r.Context()
 		session, ok := services.GetSession(ctx)
 		if !ok {
-			fmt.Println(ok)
+			services.SenData(w, "error", "Unauthorized ", http.StatusUnauthorized)
 			return
 		}
 		data.UserID = session.UserID
@@ -160,10 +179,14 @@ func PostsHandler(svc *services.UserService) http.Handler {
 
 func GetPost(svc *services.UserService) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			services.SenData(w, "error", "Method not allowed. Use POST", http.StatusMethodNotAllowed)
+			return
+		}
 		cntx := r.Context()
 		session, ok := services.GetSession(cntx)
 		if !ok {
-			fmt.Println(ok)
+			services.SenData(w, "error", "Unauthorized ", http.StatusUnauthorized)
 			return
 		}
 		posts, err := svc.Repo.GetAllPost(session.UserID)
@@ -177,8 +200,14 @@ func GetPost(svc *services.UserService) http.Handler {
 
 func GetAllUsers(svc *services.UserService) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			services.SenData(w, "error", "Method not allowed. Use POST", http.StatusMethodNotAllowed)
+			return
+		}
 		session, ok := services.GetSession(r.Context())
 		if !ok {
+			services.SenData(w, "error", "Unauthorized ", http.StatusUnauthorized)
+
 			LogoutHandler(svc)
 			return
 		}
@@ -193,6 +222,10 @@ func GetAllUsers(svc *services.UserService) http.Handler {
 
 func GetMessages(svc *services.UserService) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			services.SenData(w, "error", "Method not allowed. Use POST", http.StatusMethodNotAllowed)
+			return
+		}
 		var msg models.Loadmsg
 		err := json.NewDecoder(r.Body).Decode(&msg)
 		if err != nil {
@@ -203,6 +236,8 @@ func GetMessages(svc *services.UserService) http.Handler {
 		ctx := r.Context()
 		session, ok := services.GetSession(ctx)
 		if !ok {
+			services.SenData(w, "error", "Unauthorized ", http.StatusUnauthorized)
+
 			return
 		}
 		AllMessages, err := svc.Repo.GetMessages(msg.LastMsg, session.UserID, msg.UserID)
@@ -217,22 +252,29 @@ func GetMessages(svc *services.UserService) http.Handler {
 
 func LikeHandler(svc *services.UserService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			services.SenData(w, "error", "Method not allowed. Use POST", http.StatusMethodNotAllowed)
+			return
+		}
 		session, ok := services.GetSession(r.Context())
 		if !ok {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			services.SenData(w, "error", "Unauthorized", http.StatusUnauthorized)
 			return
 		}
 		var likeData models.Like
 		err := json.NewDecoder(r.Body).Decode(&likeData)
 		if err != nil {
-			fmt.Println(err)
-			http.Error(w, "Bad Request", http.StatusBadRequest)
+			services.SenData(w, "error", "Bad Request", http.StatusBadRequest)
 			return
 		}
 		err = svc.Repo.LikePost(likeData.PostID, session.UserID)
 		if err != nil {
-			fmt.Println(err)
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			if strings.Contains(err.Error(), "FOREIGN KEY") {
+				services.SenData(w, "error", "Unauthorized", http.StatusUnauthorized)
+				return
+			}
+
+			services.SenData(w, "error", "Internal Server Error", http.StatusInternalServerError)
 			return
 		}
 		services.SenData(w, "message", "Like created successfully", http.StatusOK)
@@ -241,22 +283,28 @@ func LikeHandler(svc *services.UserService) http.HandlerFunc {
 
 func CommentHandler(svc *services.UserService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			services.SenData(w, "error", "Method not allowed. Use POST", http.StatusMethodNotAllowed)
+			return
+		}
 		session, ok := services.GetSession(r.Context())
 		if !ok {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			services.SenData(w, "error", "Unauthorized", http.StatusUnauthorized)
 			return
 		}
 		var commentData models.Comment
 		err := json.NewDecoder(r.Body).Decode(&commentData)
 		if err != nil {
-			fmt.Println(err)
-			http.Error(w, "Bad Request", http.StatusBadRequest)
+			services.SenData(w, "error", "Bad Request", http.StatusBadRequest)
 			return
 		}
 		err = svc.Repo.AddComment(commentData.PostID, session.UserID, session.Username, commentData.Content)
 		if err != nil {
-			fmt.Println(err)
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			if strings.Contains(err.Error(), "FOREIGN KEY") {
+				services.SenData(w, "error", "Unauthorized", http.StatusUnauthorized)
+				return
+			}
+			services.SenData(w, "error", "Internal Server Error", http.StatusInternalServerError)
 			return
 		}
 		services.SenData(w, "message", "Comment created successfully", http.StatusOK)
@@ -265,22 +313,24 @@ func CommentHandler(svc *services.UserService) http.HandlerFunc {
 
 func GetCommentsHandler(svc *services.UserService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			services.SenData(w, "error", "Method not allowed. Use POST", http.StatusMethodNotAllowed)
+			return
+		}
 		_, ok := services.GetSession(r.Context())
 		if !ok {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			services.SenData(w, "error", "Unauthorized", http.StatusUnauthorized)
 			return
 		}
 		postIDStr := r.URL.Query().Get("postId")
 		postID, err := strconv.Atoi(postIDStr)
 		if err != nil {
-			fmt.Println("err of atoi", err)
-			http.Error(w, "Bad Request", http.StatusBadRequest)
+			services.SenData(w, "error", "Bad Request", http.StatusBadRequest)
 			return
 		}
 		comments, err := svc.Repo.GetComments(postID)
 		if err != nil {
-			fmt.Println("err of data base", err)
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			services.SenData(w, "error", "Internal Server Error", http.StatusInternalServerError)
 			return
 		}
 		services.SenData(w, "comments", comments, http.StatusOK)

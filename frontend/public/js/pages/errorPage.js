@@ -4,8 +4,8 @@ import { router } from "../core/router.js";
 
 
 
-function cor() {
-    window.history.replaceState({}, '', "/")
+export function cor(path) {
+    window.history.replaceState({}, '', path)
     router()
 }
 
@@ -45,6 +45,16 @@ export function renderErrorPage(err, statusCode) {
     `;
 
     const f = document.querySelector(".btn.error-btn")
-    f.addEventListener('click', cor)
+    f.addEventListener('click', cor("/"))
 
+}
+export function showToast(type, msg, duration = 4000) {
+  const c = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.innerHTML = `<span class="toast-msg">${msg}</span><button class="toast-close">✕</button>`;
+  const dismiss = () => { t.classList.add('hide'); setTimeout(() => t.remove(), 200); };
+  t.querySelector('.toast-close').addEventListener('click', dismiss);
+  if (duration > 0) setTimeout(dismiss, duration);
+  c.appendChild(t);
 }

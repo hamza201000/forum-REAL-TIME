@@ -10,7 +10,8 @@ import (
 )
 
 func InitDB() *sql.DB {
-	db, err := sql.Open("sqlite3", "./social.db")
+
+	db, err := sql.Open("sqlite3", "./social.db?_foreign_keys=on")
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -8,9 +8,10 @@ import { updateOnlineCount, updatenewMsg, updateOnlineUsers, renderCount } from 
 import { navigateTo } from "../core/router.js"
 import { showError } from "../utils/validation.js";
 import { safeSend } from "../chat/socket.js";
+import { showToast } from "../pages/errorPage.js"
 
 function logouthandler() {
-  sendData({}, "api/logout", "POST")
+  sendData({}, "/api/logout", "POST")
 }
 export async function createFeedPage(dataUser) {
   connectSocket()
@@ -96,6 +97,7 @@ export async function createFeedPage(dataUser) {
             <option value="tech">Tech</option>
             <option value="lifestyle">Lifestyle</option>
           </select>
+          <div class="modal-error" id="category-error"></div>
         </div>
         <div class="modal-actions">
           <button class="modal-publish-btn" id="modal-publish">Publish</button>
@@ -108,6 +110,7 @@ export async function createFeedPage(dataUser) {
     
 </div>
     <div id="chat-container"></div>
+    <div class="toast-container" id="toast-container"></div>
   `;
   renderFeed();
   const overlay = document.getElementById("modal-overlay");
@@ -143,18 +146,21 @@ export async function createFeedPage(dataUser) {
     const categorySelect = document.getElementById("modal-category").value.trim();
     const titleError = document.getElementById("title-error")
     const bodyError = document.getElementById("body-error")
-    titleError.classList.remove("visible")
-    bodyError.classList.remove("visible")
-    if (!title || !content) {
-      if (!title) {
-        titleError.classList.add("visible")
-        titleError.textContent = "⚠ Title cannot be empty"
-      } else if (!content) {
-        bodyError.classList.add("visible")
-        bodyError.textContent = "⚠ Content cannot be empty"
-      }
-      return;
+    const categoryError = document.getElementById("category-error")
+    if (!title) {
+      titleError.classList.add("visible")
+      titleError.textContent = "⚠ Title cannot be empty"
+      return
+    } else if (!content) {
+      bodyError.classList.add("visible")
+      bodyError.textContent = "⚠ Content cannot be empty"
+      return
+    } else if (!categorySelect) {
+      categoryError.classList.add("visible")
+      categoryError.textContent = "⚠ You must choose one category"
+      return
     }
+
     try {
       await sendData({ title, content, category: categorySelect }, "/api/posts", "POST");
       closeModal(overlay);
@@ -197,16 +203,15 @@ export async function createFeedPage(dataUser) {
         const contactUser = document.getElementById("chat-" + data.Sender_id)
         if (contactUser) {
           socket.send(JSON.stringify({
-            Type: "MsgSeen",
+            type: "MsgSeen",
             Sender_id: Number(data.Sender_id),
-            created_at: Date.now()
+            
           }))
         }
       }
       updateOnlineCount(users)
       updatenewMsg(data)
     } else if (data.type == "new_user") {
-      console.log(data);
       users = await renderContacts();
       renderCount(users)
     }
@@ -234,8 +239,7 @@ async function renderFeed() {
     }
     list.innerHTML = posts.map((p, i) => {
       const initial = (p.username || "U")[0].toUpperCase();
-      const liked = p.likedBy?.includes(user.username);
-      (p.created_at);
+      
 
       return `
           <article class="post-card"  id = "post-${p.id}">
@@ -257,7 +261,7 @@ async function renderFeed() {
             <p class="post-body">${escHtml(p.content)}</p>
             </div>
             <div class="post-actions">
-              <button class="like-btn" ${liked ? "liked" : ""} data-postid="${p.id}">
+              <button class="like-btn" data-postid="${p.id}">
                 <span class="likenmb-${p.id}" style="color: ${p.like_usr === 1 ? 'red' : ''}">
                   ${p.allLikes ?? 0} Likes
                 </span>
@@ -320,6 +324,7 @@ function closeModal(element) {
   document.getElementById("modal-category").value = ""
   document.getElementById("title-error").classList.remove("visible")
   document.getElementById("body-error").classList.remove("visible")
+  document.getElementById("category-error").classList.remove("visible")
 }
 
 
@@ -333,25 +338,40 @@ function closeModal(element) {
 
 
 
-document.body.addEventListener("click", (e) => {
+document.body.addEventListener("click", handleContactClick);
+
+function handleContactClick(e) {
   const contactItem = e.target.closest(".contact-item");
   if (!contactItem) return;
+
+  const userId = contactItem.id;
+  const chatId = "chat-" + userId;
+
+  if (document.getElementById(chatId)) return;
+
+  const usernameEl = contactItem.querySelector(".contact-name");
+  const onlineEl = contactItem.querySelector(".online");
+
   const user = {
-    id: contactItem.id,
-    username: contactItem.querySelector(".contact-name").textContent,
-    online: contactItem.querySelector(".online")
+    id: userId,
+    username: usernameEl ? usernameEl.textContent : "",
+    online: onlineEl
   };
-  if (document.getElementById("chat-" + user.id)) return;
-  document.getElementById("chat-container").innerHTML = ""
-  console.log("open");
+
+  const chatContainer = document.getElementById("chat-container");
+  if (chatContainer) {
+    chatContainer.innerHTML = "";
+  }
 
   openChat(user);
-  contactItem.style.backgroundColor = ""
+
+  contactItem.style.backgroundColor = "";
+
   safeSend({
-    Type: "MsgSeen",
+    type: "MsgSeen",
     Sender_id: Number(user.id)
-  })
-});
+  });
+}
 
 
 
@@ -368,9 +388,7 @@ document.addEventListener("click", async (e) => {
     }
     isactv.innerHTML = openPopup(post.innerHTML, postId)
     isactv.classList.add("active");
-
     await refreshComments(postId)
-
     return;
   }
   if (e.target === isactv) {
@@ -381,16 +399,15 @@ document.addEventListener("click", async (e) => {
 
   const sendBtn = e.target.closest(".send-comment-btn");
   if (sendBtn) {
-    const postId = sendBtn.id.replace("send-btn-", "");
-    const input = document.getElementById("comment-input-" + postId);
-    const content = input.value.trim();
-    if (!content) return;
+    const postId = sendBtn.dataset.id;
+    console.log(postId);
+    
+    try{
+      await sendComment(postId)
+    }catch(err){
+          showToast("error", "Failed to send comment.");
 
-    await sendData({ content, postId: Number(postId) }, "/api/comments", "POST")
-      .then(() => {
-        input.value = "";
-        input.style.height = "auto";
-      })
+    }
 
     const commList = document.getElementById("comment-list-" + postId)
     if (!commList) return
@@ -401,6 +418,26 @@ document.addEventListener("click", async (e) => {
 });
 
 
+async function sendComment(postId){
+ const input = document.getElementById("comment-input-" + postId);
+    if (!input) {
+      showToast("error", "Something went wrong. Please try again.");
+      return ;
+    }
+    const content = input.value.trim();
+    if (!content) return;
+    try {
+    await sendData({ content, postId: Number(postId) }, "/api/comments", "POST");
+
+    input.value = "";
+    input.style.height = "auto";
+
+    await refreshComments(postId);
+  } catch (err) {
+    showToast("error", "Failed to send comment.");
+  }
+}
+
 function openPopup(contnainer, postId) {
   return `
       <div class="modal-card" id="modal-card">
@@ -409,7 +446,7 @@ function openPopup(contnainer, postId) {
   <!-- Input -->
   <div class="comment-input-row">
     <textarea id="comment-input-${postId || 0}" placeholder="Write a comment…" rows="1"></textarea>
-    <button class="send-comment-btn" id="send-btn-${postId || 0}" >Post</button>
+    <button class="send-comment-btn" data-id="${postId || 0}" >Post</button>
   </div>
   <!-- List -->
   <div class="comment-list" id="comment-list-${postId || 0}">

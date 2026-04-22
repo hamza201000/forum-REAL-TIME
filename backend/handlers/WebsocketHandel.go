@@ -27,16 +27,14 @@ func WsHandle(svc *services.UserService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		conn, err := Upgrade.Upgrade(w, r, nil)
 		if err != nil {
-			fmt.Println("Upgrade error:", err)
+			services.SenData(w, "error", "WebSocket upgrade failed", http.StatusBadRequest)
+
 			return
 		}
 		ctx := r.Context()
-		if err != nil {
-			http.Error(w, "Unauthorized - no cookie", http.StatusUnauthorized)
-			return
-		}
 		session, ok := services.GetSession(ctx)
 		if !ok {
+			services.SenData(w, "error", "Unauthorized ", http.StatusUnauthorized)
 			conn.Close()
 			return
 		}
@@ -58,7 +56,7 @@ func WsHandle(svc *services.UserService) http.HandlerFunc {
 				broadcastOnlineUsers()
 			}
 			conn.Close()
-		}()
+		}() 
 		for {
 			_, message, err := conn.ReadMessage()
 			if err != nil {
@@ -125,6 +123,7 @@ func StatusHandler(svc *services.UserService) http.HandlerFunc {
 		ctx := r.Context()
 		session, ok := services.GetSession(ctx)
 		if !ok {
+			services.SenData(w, "error", "Unauthorized ", http.StatusUnauthorized)
 			return
 		}
 		mu.RLock()
@@ -188,7 +187,7 @@ func broadcastNewUsers() {
 	}
 	mu.RUnlock()
 	msg := map[string]interface{}{
-		"type":     "new_user",
+		"type": "new_user",
 	}
 	data, _ := json.Marshal(msg)
 	for _, conns := range connsSnapshot {

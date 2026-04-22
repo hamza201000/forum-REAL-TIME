@@ -1,6 +1,6 @@
 import { navigateTo, broadcastLogin, broadcastLogout } from "./router.js";
 import { checkError } from "../utils/validation.js";
-import { renderErrorPage } from "../pages/errorPage.js";
+import { renderErrorPage,showToast } from "../pages/errorPage.js";
 
 export async function sendData(data, route, method = "POST") {
     const options = {
@@ -17,8 +17,11 @@ export async function sendData(data, route, method = "POST") {
     try {
         const res = await fetch(route, options);
         const result = await res.json();
-        if (res.status >= 400 && res.status < 500) {
+        if (res.status >= 402 && res.status < 500) {
             checkError(result.error);
+            return;
+        }else if (res.status >= 400 && res.status < 402) {
+            showToast("error",result.error);
             return;
         }
         if (!res.ok) {
@@ -32,7 +35,7 @@ export async function sendData(data, route, method = "POST") {
         } else if (route === "/api/logout") {
             broadcastLogout();
         } else if (route === "/api/post") {
-            navigateTo("/");
+            broadcastLogin();
         }
         return result;
     } catch (error) {

@@ -47,7 +47,10 @@ export function createRegister() {
     <p class="login-link">Already have an account?
     <a href="" id="login-link">Sign in</a>
     </p>
-</form>`
+</form> 
+    <div class="toast-container" id="toast-container"></div>
+
+`
 
     const button = document.querySelector(".btn")
     button.addEventListener("click", function (e) {

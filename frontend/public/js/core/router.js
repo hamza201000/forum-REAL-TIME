@@ -1,33 +1,38 @@
 import { createRegister } from "../pages/pageRegister.js";
 import { createLogin } from "../pages/pageLogin.js";
 import { createFeedPage } from "../pages/pagePost.js";
-import { renderErrorPage } from "../pages/errorPage.js";
+import { renderErrorPage, showToast,cor } from "../pages/errorPage.js";
 const publicPages = ['/login', '/register']
-
+let i=0
 
 const authChannel = new BroadcastChannel('auth_sync');
 
 authChannel.onmessage = (event) => {
     if (event.data.type === 'LOGOUT') {
-        navigateTo('/login')
+        cor("/login")
     }
     if (event.data.type === 'LOGIN') {
-        navigateTo('/')
+        cor("/")
     }
 }
 
 export async function broadcastLogout() {
     authChannel.postMessage({ type: 'LOGOUT' })
-    navigateTo('/login')
+    cor("/login")
+    
 }
 
 export function broadcastLogin() {
     authChannel.postMessage({ type: 'LOGIN' })
-    navigateTo('/')
+    cor("/")
+    // navigateTo('/')
 }
 
 
 export async function router() {
+    i++
+    console.log(i);
+    
     let path = window.location.pathname
     const session = await checkSession()
     if (!session && !publicPages.includes(path)) {
@@ -44,8 +49,8 @@ export async function router() {
         createLogin()
     } else if (path == '/register') {
         createRegister()
-    }else{
-        renderErrorPage({message:"Page not found"},404)
+    } else {
+        renderErrorPage({ message: "Page not found" }, 404)
     }
 }
 
@@ -62,7 +67,5 @@ async function checkSession() {
 
 export function navigateTo(path) {
     window.history.pushState({}, '', path);
-        
-
     router()
 }
