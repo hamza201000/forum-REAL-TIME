@@ -199,3 +199,10 @@ func broadcastNewUsers() {
 		}
 	}
 }
+
+func checkOnlineUser(userID int) bool {
+	mu.RLock()
+	_, online := clients[userID]
+	mu.RUnlock()
+	return online
+}

@@ -34,7 +34,6 @@ func RegisterHandler(svc *services.UserService) http.HandlerFunc {
 		var data models.User
 		err := json.NewDecoder(r.Body).Decode(&data)
 		if err != nil {
-
 			fmt.Println(err)
 			return
 		}
@@ -80,6 +79,13 @@ func LoginHandler(svc *services.UserService) http.HandlerFunc {
 			}
 			services.SenData(w, "error", "Failed to login user", http.StatusInternalServerError)
 			return
+		}
+		check := checkOnlineUser(userID)
+		if check {
+			for _, conn := range clients[userID] {
+				conn.Close()
+			}
+			delete(clients, userID)
 		}
 		err = svc.Repo.CheckUserSession(userID)
 		if err != nil {
