@@ -23,8 +23,44 @@ var (
 	}
 )
 
+func addClient(userID int, conn *websocket.Conn) {
+	mu.Lock()
+	defer mu.Unlock()
+	clients[userID] = append(clients[userID], conn)
+}
+
+func removeClient(userID int, conn *websocket.Conn) bool {
+	mu.Lock()
+	defer mu.Unlock()
+	userClients := clients[userID]
+	for i, c := range userClients {
+		if c == conn {
+			userClients = append(userClients[:i], userClients[i+1:]...)
+			if len(userClients) == 0 {
+				delete(clients, userID)
+				return true
+			}
+			clients[userID] = userClients
+			return false
+		}
+	}
+	return len(userClients) == 0
+}
+
+func disconnectUser(userID int) {
+	mu.Lock()
+	userClients := append([]*websocket.Conn(nil), clients[userID]...)
+	delete(clients, userID)
+	mu.Unlock()
+
+	for _, conn := range userClients {
+		conn.Close()
+	}
+}
+
 func WsHandle(svc *services.UserService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("**websocket handler", r.Method)	
 		conn, err := Upgrade.Upgrade(w, r, nil)
 		if err != nil {
 			fmt.Println("Upgrade error:", err)
@@ -40,24 +76,14 @@ func WsHandle(svc *services.UserService) http.HandlerFunc {
 			conn.Close()
 			return
 		}
-		mu.Lock()
-		clients[session.UserID] = append(clients[session.UserID], conn)
-		mu.Unlock()
+		addClient(session.UserID, conn)
 
 		defer func() {
-			mu.Lock()
-			for i, c := range clients[session.UserID] {
-				if c == conn {
-					clients[session.UserID] = append(clients[session.UserID][:i], clients[session.UserID][i+1:]...)
-					break
-				}
-			}
-			mu.Unlock()
-			if len(clients[session.UserID]) == 0 {
-				delete(clients, session.UserID)
+			removedLast := removeClient(session.UserID, conn)
+			conn.Close()
+			if removedLast {
 				broadcastOnlineUsers()
 			}
-			conn.Close()
 		}()
 		for {
 			_, message, err := conn.ReadMessage()
@@ -149,17 +175,18 @@ func StatusHandler(svc *services.UserService) http.HandlerFunc {
 }
 
 func broadcastOnlineUsers() {
+	mu.RLock()
 	if len(clients) == 0 {
+		mu.RUnlock()
 		return
 	}
-	mu.RLock()
 	var userIds []int
 	for userId := range clients {
 		userIds = append(userIds, userId)
 	}
 	connsSnapshot := make(map[int][]*websocket.Conn, len(clients))
 	for k, v := range clients {
-		connsSnapshot[k] = v
+		connsSnapshot[k] = append([]*websocket.Conn(nil), v...)
 	}
 	mu.RUnlock()
 	msg := map[string]interface{}{
@@ -169,33 +196,29 @@ func broadcastOnlineUsers() {
 	data, _ := json.Marshal(msg)
 	for _, conns := range connsSnapshot {
 		for _, conn := range conns {
-			mu.Lock()
 			conn.WriteMessage(websocket.TextMessage, data)
-			mu.Unlock()
-
 		}
 	}
 }
 
 func broadcastNewUsers() {
+	mu.RLock()
 	if len(clients) == 0 {
+		mu.RUnlock()
 		return
 	}
-	mu.RLock()
 	connsSnapshot := make(map[int][]*websocket.Conn, len(clients))
 	for k, v := range clients {
-		connsSnapshot[k] = v
+		connsSnapshot[k] = append([]*websocket.Conn(nil), v...)
 	}
 	mu.RUnlock()
 	msg := map[string]interface{}{
-		"type":     "new_user",
+		"type": "new_user",
 	}
 	data, _ := json.Marshal(msg)
 	for _, conns := range connsSnapshot {
 		for _, conn := range conns {
-			mu.Lock()
 			conn.WriteMessage(websocket.TextMessage, data)
-			mu.Unlock()
 		}
 	}
 }

@@ -1,5 +1,5 @@
 import { formatDate } from "../utils/helpers.js";
-import { socket } from "./socket.js";
+import { safeSend, socket } from "./socket.js";
 
 import { sendData } from "../core/api.js";
 
@@ -128,11 +128,11 @@ export function closeChat(userId) {
 export function sendMessage(input, user) {
     const message = input.value.trim();
     if (!message) return;
-    socket.send(JSON.stringify({
+    safeSend({
         Type: "MsgtoReceiver",
         Receiver_id: Number(user.id),
         Message: message
-    }))
+    })
     input.value = "";
 }
 

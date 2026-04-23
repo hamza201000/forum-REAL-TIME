@@ -15,6 +15,7 @@ import (
 
 func HomeHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		// fmt.Println("**home handler", r.Method)
 		if r.Method == http.MethodPost {
 			fmt.Println("home handler", r.Method)
 			return
@@ -31,6 +32,7 @@ func HomeHandler() http.HandlerFunc {
 
 func RegisterHandler(svc *services.UserService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		// fmt.Println("**register handler", r.Method)
 		var data models.User
 		err := json.NewDecoder(r.Body).Decode(&data)
 		if err != nil {
@@ -58,6 +60,7 @@ func RegisterHandler(svc *services.UserService) http.HandlerFunc {
 
 func LoginHandler(svc *services.UserService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		// fmt.Println("**login handler", r.Method)
 		if r.Method == http.MethodGet {
 			return
 		}
@@ -82,10 +85,7 @@ func LoginHandler(svc *services.UserService) http.HandlerFunc {
 		}
 		check := checkOnlineUser(userID)
 		if check {
-			for _, conn := range clients[userID] {
-				conn.Close()
-			}
-			delete(clients, userID)
+			disconnectUser(userID)
 		}
 		err = svc.Repo.CheckUserSession(userID)
 		if err != nil {
@@ -105,6 +105,7 @@ func LoginHandler(svc *services.UserService) http.HandlerFunc {
 
 func SessionHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// fmt.Println("**session handler", r.Method)
 		session, _ := services.GetSession(r.Context())
 		w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Type", "application/json")
@@ -118,10 +119,17 @@ func SessionHandler() http.Handler {
 
 func LogoutHandler(svc *services.UserService) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		cookie, _ := r.Cookie("session_token")
-		session, _ := svc.Repo.ValidateSession(cookie.Value)
-		delete(clients, session.UserID)
-		broadcastOnlineUsers()
+		// fmt.Println("**logout handler", r.Method)
+		cookie, err := r.Cookie("session_token")
+		if err != nil || cookie.Value == "" {
+			services.SenData(w, "error", "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+		session, err := svc.Repo.ValidateSession(cookie.Value)
+		if err == nil && session != nil {
+			disconnectUser(session.UserID)
+			broadcastOnlineUsers()
+		}
 		svc.Repo.DeleteSession(cookie.Value)
 		middleware.ClearSessionCookie(w)
 		services.SenData(w, "message", "User logged out successfully", http.StatusOK)
@@ -130,6 +138,7 @@ func LogoutHandler(svc *services.UserService) http.Handler {
 
 func PostsHandler(svc *services.UserService) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// fmt.Println("**posts handler", r.Method)
 		if r.Method == http.MethodGet {
 			services.SenData(w, "error", "Method not allowed. Use POST", http.StatusMethodNotAllowed)
 			return
@@ -160,6 +169,7 @@ func PostsHandler(svc *services.UserService) http.Handler {
 
 func GetPost(svc *services.UserService) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// fmt.Println("**get posts handler", r.Method)
 		cntx := r.Context()
 		session, ok := services.GetSession(cntx)
 		if !ok {
@@ -177,6 +187,7 @@ func GetPost(svc *services.UserService) http.Handler {
 
 func GetAllUsers(svc *services.UserService) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// fmt.Println("**get all users handler", r.Method)
 		session, ok := services.GetSession(r.Context())
 		if !ok {
 			LogoutHandler(svc)
@@ -193,6 +204,7 @@ func GetAllUsers(svc *services.UserService) http.Handler {
 
 func GetMessages(svc *services.UserService) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// fmt.Println("**get messages handler", r.Method)
 		var msg models.Loadmsg
 		err := json.NewDecoder(r.Body).Decode(&msg)
 		if err != nil {
@@ -206,7 +218,6 @@ func GetMessages(svc *services.UserService) http.Handler {
 			return
 		}
 		AllMessages, err := svc.Repo.GetMessages(msg.LastMsg, session.UserID, msg.UserID)
-		
 		if err != nil {
 			broadcastOnlineUsers()
 			fmt.Println(err)
@@ -218,6 +229,7 @@ func GetMessages(svc *services.UserService) http.Handler {
 
 func LikeHandler(svc *services.UserService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		// fmt.Println("**like handler", r.Method)
 		session, ok := services.GetSession(r.Context())
 		if !ok {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
@@ -242,6 +254,7 @@ func LikeHandler(svc *services.UserService) http.HandlerFunc {
 
 func CommentHandler(svc *services.UserService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		// fmt.Println("**comment handler", r.Method)
 		session, ok := services.GetSession(r.Context())
 		if !ok {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
@@ -266,6 +279,7 @@ func CommentHandler(svc *services.UserService) http.HandlerFunc {
 
 func GetCommentsHandler(svc *services.UserService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		// fmt.Println("**get comments handler", r.Method)
 		_, ok := services.GetSession(r.Context())
 		if !ok {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)

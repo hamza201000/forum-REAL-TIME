@@ -196,11 +196,11 @@ export async function createFeedPage(dataUser) {
       if (data.type === "MsgtoReceiver") {
         const contactUser = document.getElementById("chat-" + data.Sender_id)
         if (contactUser) {
-          socket.send(JSON.stringify({
+          safeSend({
             Type: "MsgSeen",
             Sender_id: Number(data.Sender_id),
             created_at: Date.now()
-          }))
+          })
         }
       }
       updateOnlineCount(users)
