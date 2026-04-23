@@ -3,7 +3,7 @@ const messageQueue = []
 let retries=0
 
 export function connectSocket() {
-  socket = new WebSocket("ws://loaclhost:8080/api/ws");
+  socket = new WebSocket("ws://localhost:8080/api/ws");
   socket.onopen = () => {
     messageQueue.forEach(msg => socket.send(msg))
     messageQueue.length = 0
