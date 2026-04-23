@@ -19,8 +19,8 @@ func main() {
 
 	handler := routes.RegisterRoutes(DB) // handler http.Handler
 
-	fmt.Println("Server is running on http://localhost:8080")
-	if err := http.ListenAndServe(":8080", handler); err != nil {
+	fmt.Println("Server is running on http://10.1.9.7:8080")
+	if err := http.ListenAndServe("10.1.9.7:8080", handler); err != nil {
 		log.Fatalf("error starting server: %v", err)
 	}
 }

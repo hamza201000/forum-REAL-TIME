@@ -96,6 +96,7 @@ export async function createFeedPage(dataUser) {
             <option value="tech">Tech</option>
             <option value="lifestyle">Lifestyle</option>
           </select>
+          <div class="modal-error" id="category-error"></div>
         </div>
         <div class="modal-actions">
           <button class="modal-publish-btn" id="modal-publish">Publish</button>
@@ -140,18 +141,22 @@ export async function createFeedPage(dataUser) {
   document.getElementById("modal-publish").addEventListener("click", async () => {
     const title = document.getElementById("modal-title").value.trim();
     const content = document.getElementById("modal-body").value.trim();
+    const catrgorySelect = document.getElementById("modal-category").value.trim();
     const categorySelect = document.getElementById("modal-category").value.trim();
     const titleError = document.getElementById("title-error")
     const bodyError = document.getElementById("body-error")
     titleError.classList.remove("visible")
     bodyError.classList.remove("visible")
-    if (!title || !content) {
+    if (!title || !content||!categorySelect) {
       if (!title) {
         titleError.classList.add("visible")
         titleError.textContent = "⚠ Title cannot be empty"
       } else if (!content) {
         bodyError.classList.add("visible")
         bodyError.textContent = "⚠ Content cannot be empty"
+      }else if (!categorySelect) {
+        bodyError.classList.add("visible")
+        bodyError.textContent = "⚠ Please select a category"
       }
       return;
     }
