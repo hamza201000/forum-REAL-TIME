@@ -73,6 +73,8 @@ export function checkUser(type, user) {
         }
 
     } else if (type === "login") {
+        user.user = user.user.trim();
+            user.password = user.password.trim();
         if (!user.user) {
             showError("Email or username is required", ".user");
             return false;

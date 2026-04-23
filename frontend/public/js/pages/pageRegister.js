@@ -36,11 +36,11 @@ export function createRegister() {
     </div>
     <div class="field Email">
         <label>Email</label>
-        <input id="Email" type="email"   name="email" >
+        <input id="Email" type="email"   name="email" placeholder="you@example.com" >
     </div>
     <div class="field Password">
         <label>Password</label>
-        <input id="Password" type="password" name="password" >
+        <input id="Password" type="password" name="password"  >
     </div>
    
     <button class="btn" type="submit">Create account</button>

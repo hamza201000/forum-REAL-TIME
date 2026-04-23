@@ -12,13 +12,13 @@ export function createLogin() {
 <div class='field user'>
     
     <label>Email or username</label>
-    <input id='Email' type='text' name ='user'>
+    <input id='Email' type='text' name ='user' placeholder="Enter your email or username">
 </div>
 
 
 <div class='field password'>
     <label>Password</label>
-    <input id='Password' type='password' name ='password'>
+    <input id='Password' type='password' name ='password' placeholder="Enter your password">
 </div>
 
 </div>
@@ -39,9 +39,8 @@ export function createLogin() {
             e.preventDefault()
             const formData = new FormData(form)
             const data = (Object.fromEntries(formData.entries()))
-            console.log("data :",data);
-            data.user = data.user.trim();
-            data.password = data.password.trim();
+          
+            
             if (!checkUser("login", data)) {
                 return
             }
