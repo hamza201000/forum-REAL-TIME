@@ -74,11 +74,8 @@ func (r *Userepository) GetUserId(user models.LoginRequest) (int, string, error)
 
 func (r *Userepository) CheckUserSession(userID int) error {
 	query := "DELETE FROM sessions WHERE user_id = ?"
-	err := r.Db.QueryRow(query, userID).Scan()
+	_, err := r.Db.Exec(query, userID)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil
-		}
 		return err
 	}
 	return nil

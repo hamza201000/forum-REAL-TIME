@@ -143,17 +143,20 @@ export async function createFeedPage(dataUser) {
   document.getElementById("modal-publish").addEventListener("click", async () => {
     const title = document.getElementById("modal-title").value.trim();
     const content = document.getElementById("modal-body").value.trim();
+    const catrgorySelect = document.getElementById("modal-category").value.trim();
     const categorySelect = document.getElementById("modal-category").value.trim();
     const titleError = document.getElementById("title-error")
     const bodyError = document.getElementById("body-error")
-    const categoryError = document.getElementById("category-error")
-    if (!title) {
-      titleError.classList.add("visible")
-      titleError.textContent = "⚠ Title cannot be empty"
+    titleError.classList.remove("visible")
+    bodyError.classList.remove("visible")
+    if (!title || !content) {
+      if (!title) {
+        titleError.classList.add("visible")
+        titleError.textContent = "⚠ Title cannot be empty"
       return
-    } else if (!content) {
-      bodyError.classList.add("visible")
-      bodyError.textContent = "⚠ Content cannot be empty"
+      } else if (!content) {
+        bodyError.classList.add("visible")
+        bodyError.textContent = "⚠ Content cannot be empty"
       return
     } else if (!categorySelect) {
       categoryError.classList.add("visible")
@@ -167,7 +170,7 @@ export async function createFeedPage(dataUser) {
       renderFeed();
     } catch (err) {
       console.error("Publish failed:", err);
-    }
+    }}
   });
   const logoutbutton = document.getElementById("logout-btn")
   logoutbutton.addEventListener("click", () => {
@@ -203,9 +206,9 @@ export async function createFeedPage(dataUser) {
         const contactUser = document.getElementById("chat-" + data.Sender_id)
         if (contactUser) {
           socket.send(JSON.stringify({
-            type: "MsgSeen",
+            Type: "MsgSeen",
             Sender_id: Number(data.Sender_id),
-            
+            created_at: Date.now()
           }))
         }
       }

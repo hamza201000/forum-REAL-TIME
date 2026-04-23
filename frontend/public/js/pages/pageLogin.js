@@ -39,6 +39,9 @@ export function createLogin() {
             e.preventDefault()
             const formData = new FormData(form)
             const data = (Object.fromEntries(formData.entries()))
+            console.log("data :",data);
+            data.user = data.user.trim();
+            data.password = data.password.trim();
             if (!checkUser("login", data)) {
                 return
             }

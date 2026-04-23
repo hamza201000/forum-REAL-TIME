@@ -58,6 +58,12 @@ export function createRegister() {
         const form = document.getElementById("userForm")
         const formData = new FormData(form)
         const data = (Object.fromEntries(formData.entries()))
+        data.firstname = data.firstname.trim();
+        data.lastname = data.lastname.trim();
+        data.nickname = data.nickname.trim();
+        data.age = data.age.trim();
+        data.email = data.email.trim();
+        data.password = data.password.trim();
         if (!checkUser("register", data)) {
             return
         }

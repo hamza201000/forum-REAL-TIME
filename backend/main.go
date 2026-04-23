@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
@@ -9,13 +10,17 @@ import (
 )
 
 func main() {
-	DB := db.InitDB()
+	DB, err := db.InitDB()
+	if err != nil {
+		log.Fatalf("error initializing database: %v", err)
+	}
 
 	defer DB.Close()
 
 	handler := routes.RegisterRoutes(DB) // handler http.Handler
-	
-	if err := http.ListenAndServe(":8080", handler); err != nil {
-		log.Fatal("error starting server : %v", err)
+
+	fmt.Println("Server is running on http://10.1.9.7:8080")
+	if err := http.ListenAndServe("10.1.9.7:8080", handler); err != nil {
+		log.Fatalf("error starting server: %v", err)
 	}
 }
