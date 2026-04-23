@@ -19,6 +19,12 @@ export function validateEmail(email) {
 export function checkUser(type, user) {
     document.querySelectorAll(".invalid").forEach(el => el.remove());
     if (type === "register") {
+        user.firstname = user.firstname.trim();
+                user.lastname = user.lastname.trim();
+                user.nickname = user.nickname.trim();
+                user.age = user.age.trim();
+                user.email = user.email.trim();
+                user.password = user.password.trim();
         if (!user.firstname || user.firstname.length < 3) {
             showError(
                 user.firstname ? "First name must be at least 3 characters" : "First name is required",

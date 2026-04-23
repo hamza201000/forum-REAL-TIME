@@ -60,7 +60,7 @@ func disconnectUser(userID int) {
 
 func WsHandle(svc *services.UserService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("**websocket handler", r.Method)	
+		fmt.Println("**websocket handler", r.Method)
 		conn, err := Upgrade.Upgrade(w, r, nil)
 		if err != nil {
 			services.SenData(w, "error", "WebSocket upgrade failed", http.StatusBadRequest)
@@ -82,12 +82,8 @@ func WsHandle(svc *services.UserService) http.HandlerFunc {
 			if removedLast {
 				broadcastOnlineUsers()
 			}
-<<<<<<< HEAD
-			conn.Close()
-		}() 
-=======
 		}()
->>>>>>> forum-main
+
 		for {
 			_, message, err := conn.ReadMessage()
 			if err != nil {

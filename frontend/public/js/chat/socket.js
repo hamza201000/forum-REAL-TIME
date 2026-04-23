@@ -9,19 +9,13 @@ export function connectSocket() {
     messageQueue.length = 0
     retries=0
   }
-<<<<<<< HEAD
+
   
  socket.onclose = () => {
     const timeout = Math.min(1000 * 2 ** retries, 30000);
     retries++;
     setTimeout(connectSocket, timeout);
   };
-=======
-  socket.onclose = () => {
-    console.log("Socket closed")
-  }
-
->>>>>>> forum-main
 }
 
 export function safeSend(data) {

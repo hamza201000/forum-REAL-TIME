@@ -8,14 +8,8 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-<<<<<<< HEAD
-func InitDB() *sql.DB {
-
-	db, err := sql.Open("sqlite3", "./social.db?_foreign_keys=on")
-=======
 func InitDB() (*sql.DB, error) {
-	db, err := sql.Open("sqlite3", "./social.db")
->>>>>>> forum-main
+	db, err := sql.Open("sqlite3", "./social.db?_foreign_keys=on")
 	if err != nil {
 		return nil, err
 	}
